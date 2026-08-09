@@ -72,7 +72,7 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
 
     // Solution is posted by the user as a separate comment
     if (commentStr.contains(fileContentsForUser)) {
-      return success(this).build();
+      return failed(this).build();
     }
 
     try {

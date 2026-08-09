@@ -101,7 +101,7 @@ public class ProfileZipSlip extends ProfileUploadBase {
     if (Arrays.equals(currentImage, newImage)) {
       return failed(this).output("path-traversal-zip-slip.extracted").build();
     }
-    return success(this).output("path-traversal-zip-slip.extracted").build();
+    return failed(this).output("path-traversal-zip-slip.extracted").build();
   }
 
   @GetMapping("/PathTraversal/zip-slip/")

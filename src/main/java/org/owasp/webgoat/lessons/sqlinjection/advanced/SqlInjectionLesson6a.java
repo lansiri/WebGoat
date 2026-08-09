@@ -105,8 +105,8 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
     }
 
     output.append(appendingWhenSucceded);
-    return success(this)
-        .feedback("sql-injection.advanced.6a.success")
+    return failed(this)
+        .feedback("sql-injection.advanced.6a.no.results")
         .feedbackArgs(output.toString())
         .output(" Your query was: " + query)
         .build();

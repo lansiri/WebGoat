@@ -74,7 +74,7 @@ public class SigningAssignment implements AssignmentEndpoint {
     }
     /* orginal modulus must be used otherwise the signature would be invalid */
     if (CryptoUtil.verifyMessage(modulus, signature, keyPair.getPublic())) {
-      return success(this).feedback("crypto-signing.success").build();
+      return failed(this).feedback("crypto-signing.notok").build();
     } else {
       log.warn("signature incorrect");
       return failed(this).feedback("crypto-signing.notok").build();

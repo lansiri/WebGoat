@@ -68,7 +68,7 @@ public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
           return failed(this).feedback("jwt-final-jerry-account").build();
         }
         if ("Tom".equals(username)) {
-          return success(this).build();
+          return failed(this).feedback("jwt-invalid-token").build();
         } else {
           return failed(this).feedback("jwt-final-not-tom").build();
         }
