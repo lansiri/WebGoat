@@ -49,6 +49,16 @@ public class IDORLogin implements AssignmentEndpoint {
   public AttackResult completed(@RequestParam String username, @RequestParam String password) {
     initIDORInfo();
 
-    return failed(this).feedback("idor.login.failure").build();
+    if (idorUserInfo.containsKey(username)) {
+      if ("tom".equals(username) && idorUserInfo.get("tom").get("password").equals(password)) {
+        lessonSession.setValue("idor-authenticated-as", username);
+        lessonSession.setValue("idor-authenticated-user-id", idorUserInfo.get(username).get("id"));
+        return success(this).feedback("idor.login.success").feedbackArgs(username).build();
+      } else {
+        return failed(this).feedback("idor.login.failure").build();
+      }
+    } else {
+      return failed(this).feedback("idor.login.failure").build();
+    }
   }
 }

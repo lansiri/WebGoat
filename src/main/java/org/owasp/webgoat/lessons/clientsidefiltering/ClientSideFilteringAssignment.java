@@ -27,6 +27,8 @@ public class ClientSideFilteringAssignment implements AssignmentEndpoint {
   @PostMapping("/clientSideFiltering/attack1")
   @ResponseBody
   public AttackResult completed(@RequestParam String answer) {
-    return failed(this).feedback("ClientSideFiltering.incorrect").build();
+    return "450000".equals(answer)
+        ? success(this).feedback("assignment.solved").build()
+        : failed(this).feedback("ClientSideFiltering.incorrect").build();
   }
 }
