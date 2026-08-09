@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.owasp.webgoat.container.plugins.LessonTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +34,28 @@ class ResetLinkAssignmentTest extends LessonTest {
 
   @BeforeEach
   public void setup() {
+    ResetLinkAssignment.resetLinks.clear();
+    ResetLinkAssignment.resetLinkOwners.clear();
+    ResetLinkAssignment.usersToTomPassword.clear();
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+  }
+
+  @Test
+  void ownerCanUseLinkOnceButForeignUserCannotConsumeIt() {
+    var assignment = new ResetLinkAssignment();
+    var form = new org.owasp.webgoat.lessons.passwordreset.resetlink.PasswordChangeForm();
+    form.setResetLink("owner-link");
+    form.setPassword("secret1");
+    ResetLinkAssignment.resetLinks.add("owner-link");
+    ResetLinkAssignment.resetLinkOwners.put("owner-link", "owner");
+
+    assignment.changePassword(form, new BeanPropertyBindingResult(form, "form"), "foreign");
+    Assertions.assertThat(ResetLinkAssignment.resetLinks).contains("owner-link");
+    Assertions.assertThat(ResetLinkAssignment.usersToTomPassword).doesNotContainKey("foreign");
+
+    assignment.changePassword(form, new BeanPropertyBindingResult(form, "form"), "owner");
+    Assertions.assertThat(ResetLinkAssignment.resetLinks).doesNotContain("owner-link");
+    Assertions.assertThat(ResetLinkAssignment.usersToTomPassword).containsEntry("owner", "secret1");
   }
 
   @Test
