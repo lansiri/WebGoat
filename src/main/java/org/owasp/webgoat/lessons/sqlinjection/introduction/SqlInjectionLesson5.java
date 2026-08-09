@@ -49,7 +49,6 @@ public class SqlInjectionLesson5 implements AssignmentEndpoint {
   @PostMapping("/SqlInjection/attack5")
   @ResponseBody
   public AttackResult completed(String query) {
-    createUser();
     return injectableQuery(query);
   }
 
