@@ -110,6 +110,37 @@ public class JWTSecretKeyEndpointTest extends LessonTest {
   }
 
   @Test
+  public void oldDictionarySecretsCannotForgeWebGoatToken() throws Exception {
+    Claims claims = createClaims("WebGoat");
+
+    for (String weakSecret :
+        new String[] {"victory", "business", "available", "shipping", "washington"}) {
+      String token = Jwts.builder().setClaims(claims).signWith(HS512, weakSecret).compact();
+
+      mockMvc
+          .perform(MockMvcRequestBuilders.post("/JWT/secret").param("token", token))
+          .andExpect(status().isOk())
+          .andExpect(
+              jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
+    }
+  }
+
+  @Test
+  public void validKeyWithDifferentAlgorithmIsRejected() throws Exception {
+    Claims claims = createClaims("WebGoat");
+    String token =
+        Jwts.builder()
+            .setClaims(claims)
+            .signWith(io.jsonwebtoken.SignatureAlgorithm.HS256, JWT_SECRET)
+            .compact();
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.post("/JWT/secret").param("token", token))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
+  }
+
+  @Test
   void unsignedToken() throws Exception {
     Claims claims = createClaims("WebGoat");
     String token = Jwts.builder().setClaims(claims).compact();

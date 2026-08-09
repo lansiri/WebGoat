@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import org.hamcrest.CoreMatchers;
@@ -72,7 +73,7 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
   }
 
   private String getSecretToken(String token) {
-    for (String key : JWTSecretKeyEndpoint.SECRETS) {
+    for (String key : List.of("victory", "business", "available", "shipping", "washington")) {
       try {
         Jwt jwt = Jwts.parser().setSigningKey(TextCodec.BASE64.encode(key)).parse(token);
       } catch (JwtException e) {
