@@ -52,7 +52,7 @@ public class EncodingAssignment implements AssignmentEndpoint {
         && answer_user != null
         && answer_pwd != null
         && basicAuth.equals(getBasicAuth(answer_user, answer_pwd))) {
-      return failed(this).feedback("crypto-encoding.empty").build();
+      return success(this).feedback("crypto-encoding.success").build();
     } else {
       return failed(this).feedback("crypto-encoding.empty").build();
     }
