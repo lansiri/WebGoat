@@ -7,6 +7,8 @@ package org.owasp.webgoat.lessons.hijacksession.cas;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.DoublePredicate;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -25,6 +27,7 @@ public class HijackSessionAuthenticationProvider implements AuthenticationProvid
   private Queue<String> sessions = new LinkedList<>();
   protected static final int MAX_SESSIONS = 50;
 
+  private static final DoublePredicate PROBABILITY_DOUBLE_PREDICATE = pr -> pr < 0.75;
   private static final Supplier<String> GENERATE_SESSION_ID =
       () -> UUID.randomUUID().toString();
   public static final Supplier<Authentication> AUTHENTICATION_SUPPLIER =
@@ -46,7 +49,17 @@ public class HijackSessionAuthenticationProvider implements AuthenticationProvid
       authentication.setId(GENERATE_SESSION_ID.get());
     }
 
+    authorizedUserAutoLogin();
+
     return authentication;
+  }
+
+  protected void authorizedUserAutoLogin() {
+    if (!PROBABILITY_DOUBLE_PREDICATE.test(ThreadLocalRandom.current().nextDouble())) {
+      Authentication authentication = AUTHENTICATION_SUPPLIER.get();
+      authentication.setAuthenticated(true);
+      addSession(authentication.getId());
+    }
   }
 
   protected boolean addSession(String sessionId) {

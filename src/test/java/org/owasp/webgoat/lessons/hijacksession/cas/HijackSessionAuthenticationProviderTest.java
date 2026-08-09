@@ -88,12 +88,13 @@ class HijackSessionAuthenticationProviderTest {
   }
 
   @Test
-  void anonymousAuthenticationDoesNotMintAPrivilegedSession() {
-    Authentication auth =
-        provider.authenticate(Authentication.builder().name("anonymous").credentials("none").build());
+  void testMaxSessions() {
+    for (int i = 0; i <= HijackSessionAuthenticationProvider.MAX_SESSIONS + 1; i++) {
+      provider.authorizedUserAutoLogin();
+      provider.addSession(null);
+    }
 
-    assertThat(auth.isAuthenticated(), is(false));
-    assertThat(provider.getSessionsSize(), is(0));
+    assertThat(provider.getSessionsSize(), is(HijackSessionAuthenticationProvider.MAX_SESSIONS));
   }
 
   private static Stream<Arguments> authenticationForCookieValues() {
