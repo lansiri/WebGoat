@@ -11,6 +11,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.owasp.webgoat.container.plugins.LessonTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +35,37 @@ class ResetLinkAssignmentTest extends LessonTest {
 
   @BeforeEach
   public void setup() {
+    ResetLinkAssignment.resetLinks.clear();
+    ResetLinkAssignment.resetLinkRecipients.clear();
+    ResetLinkAssignment.userToTomResetLink.clear();
+    ResetLinkAssignment.usersToTomPassword.clear();
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+  }
+
+  @Test
+  void resetLifecycleBindsTomRecipientAndRejectsForeignUse() {
+    var mail = Mockito.mock(org.springframework.web.client.RestTemplate.class);
+    var forgot =
+        new ResetLinkAssignmentForgotPassword(
+            mail, "wolf", "9090", "http://wolf", "http://mail", "https://trusted.example/WebGoat/");
+    forgot.sendPasswordResetLink(TOM_EMAIL, Mockito.mock(jakarta.servlet.http.HttpServletRequest.class), "attacker");
+    Assertions.assertThat(ResetLinkAssignment.resetLinks).isEmpty();
+
+    forgot.sendPasswordResetLink(TOM_EMAIL, Mockito.mock(jakarta.servlet.http.HttpServletRequest.class), "tom");
+    String link = ResetLinkAssignment.resetLinks.getFirst();
+    ArgumentCaptor<PasswordResetEmail> email = ArgumentCaptor.forClass(PasswordResetEmail.class);
+    Mockito.verify(mail).postForEntity(Mockito.eq("http://mail"), email.capture(), Mockito.eq(Object.class));
+    Assertions.assertThat(email.getValue().getContents()).contains("https://trusted.example/WebGoat/PasswordReset/reset/reset-password/" + link);
+
+    var form = new org.owasp.webgoat.lessons.passwordreset.resetlink.PasswordChangeForm();
+    form.setResetLink(link);
+    form.setPassword("secret1");
+    var assignment = new ResetLinkAssignment();
+    assignment.changePassword(form, new BeanPropertyBindingResult(form, "form"), "attacker");
+    Assertions.assertThat(ResetLinkAssignment.resetLinks).contains(link);
+    assignment.changePassword(form, new BeanPropertyBindingResult(form, "form"), "tom");
+    Assertions.assertThat(ResetLinkAssignment.resetLinks).doesNotContain(link);
+    Assertions.assertThat(ResetLinkAssignment.usersToTomPassword).containsEntry("tom", "secret1");
   }
 
   @Test
@@ -80,7 +113,7 @@ class ResetLinkAssignmentTest extends LessonTest {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/PasswordReset/ForgotPassword/create-password-reset-link")
-                .param("email", TOM_EMAIL)
+                .param("email", "test@webgoat-cloud.org")
                 .header(HttpHeaders.HOST, webWolfHost + ":" + webWolfPort))
         .andExpect(status().isOk());
     Assertions.assertThat(ResetLinkAssignment.resetLinks).isNotEmpty();
