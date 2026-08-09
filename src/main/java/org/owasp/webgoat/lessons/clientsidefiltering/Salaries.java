@@ -59,7 +59,7 @@ public class Salaries {
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
     XPath path = factory.newXPath();
-    int columns = 5;
+    int columns = 3;
     List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
