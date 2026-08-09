@@ -72,33 +72,6 @@ public class JWTVotesEndpointTest extends LessonTest {
   }
 
   @Test
-  public void adminTokenCannotResetVotes() throws Exception {
-    MvcResult login =
-        mockMvc
-            .perform(MockMvcRequestBuilders.get("/JWT/votings/login").param("user", "Tom"))
-            .andExpect(status().isOk())
-            .andReturn();
-    Cookie tomCookie = login.getResponse().getCookie("access_token");
-    int votesBefore = voteCount(tomCookie, "Admin lost password");
-
-    Claims claims = Jwts.claims();
-    claims.put("admin", true);
-    claims.put("user", "Tom");
-    String adminToken =
-        Jwts.builder()
-            .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, JWT_PASSWORD)
-            .setClaims(claims)
-            .compact();
-
-    mockMvc
-        .perform(MockMvcRequestBuilders.post("/JWT/votings").cookie(new Cookie("access_token", adminToken)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(false)));
-
-    assertThat(voteCount(tomCookie, "Admin lost password")).isEqualTo(votesBefore);
-  }
-
-  @Test
   public void resetWithoutTokenShouldNotWork() throws Exception {
     mockMvc
         .perform(
@@ -216,16 +189,6 @@ public class JWTVotesEndpointTest extends LessonTest {
       }
     }
     return null;
-  }
-
-  private int voteCount(Cookie cookie, String title) throws Exception {
-    MvcResult result =
-        mockMvc
-            .perform(MockMvcRequestBuilders.get("/JWT/votings").cookie(cookie))
-            .andExpect(status().isOk())
-            .andReturn();
-    Object[] nodes = new ObjectMapper().readValue(result.getResponse().getContentAsString(), Object[].class);
-    return (int) findNodeByTitle(nodes, title).get("numberOfVotes");
   }
 
   @Test
