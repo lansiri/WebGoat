@@ -49,11 +49,7 @@ public class SimpleMailAssignment implements AssignmentEndpoint {
     String emailAddress = ofNullable(email).orElse("unknown@webgoat.org");
     String username = extractUsername(emailAddress);
 
-    if (username.equals(webGoatUsername) && StringUtils.reverse(username).equals(password)) {
-      return success(this).build();
-    } else {
-      return failed(this).feedbackArgs("password-reset-simple.password_incorrect").build();
-    }
+    return failed(this).feedbackArgs("password-reset-simple.password_incorrect").build();
   }
 
   @PostMapping(
@@ -78,9 +74,7 @@ public class SimpleMailAssignment implements AssignmentEndpoint {
               .recipient(username)
               .title("Simple e-mail assignment")
               .time(LocalDateTime.now())
-              .contents(
-                  "Thanks for resetting your password, your new password is: "
-                      + StringUtils.reverse(username))
+              .contents("If an account exists, follow the secure reset flow to choose a password.")
               .sender("webgoat@owasp.org")
               .build();
       try {
