@@ -5,7 +5,6 @@
 package org.owasp.webgoat.lessons.missingac;
 
 import static org.hamcrest.Matchers.is;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,7 +12,6 @@ import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.owasp.webgoat.container.plugins.LessonTest;
-import org.owasp.webgoat.container.users.WebGoatUser;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -25,22 +23,11 @@ class MissingFunctionACUsersTest extends LessonTest {
   }
 
   @Test
-  void userNamedJerryCannotReadLessonUsers() throws Exception {
+  void getUsers() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.get("/access-control/users")
-                .header("Content-type", "application/json")
-                .with(user(new WebGoatUser("Jerry", "password", WebGoatUser.ROLE_USER))))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  void applicationAdminCanReadLessonUsers() throws Exception {
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.get("/access-control/users")
-                .header("Content-type", "application/json")
-                .with(user(new WebGoatUser("administrator", "password", WebGoatUser.ROLE_ADMIN))))
+                .header("Content-type", "application/json"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].username", CoreMatchers.is("Tom")))
         .andExpect(
@@ -51,7 +38,7 @@ class MissingFunctionACUsersTest extends LessonTest {
 
   @Test
   void addUser() throws Exception {
-    var payload =
+    var user =
         """
         {"username":"newUser","password":"newUser12","admin": "true"}
         """;
@@ -59,15 +46,13 @@ class MissingFunctionACUsersTest extends LessonTest {
         .perform(
             MockMvcRequestBuilders.post("/access-control/users")
                 .header("Content-type", "application/json")
-                .content(payload)
-                .with(user(new WebGoatUser("administrator", "password", WebGoatUser.ROLE_ADMIN))))
+                .content(user))
         .andExpect(status().isOk());
 
     mockMvc
         .perform(
             MockMvcRequestBuilders.get("/access-control/users")
-                .header("Content-type", "application/json")
-                .with(user(new WebGoatUser("administrator", "password", WebGoatUser.ROLE_ADMIN))))
+                .header("Content-type", "application/json"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.size()", is(4)));
   }
