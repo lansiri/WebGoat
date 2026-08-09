@@ -36,21 +36,18 @@ public class ResetLinkAssignmentForgotPassword implements AssignmentEndpoint {
   private final String webWolfPort;
   private final String webWolfURL;
   private final String webWolfMailURL;
-  private final String webGoatUrl;
 
   public ResetLinkAssignmentForgotPassword(
       RestTemplate restTemplate,
       @Value("${webwolf.host}") String webWolfHost,
       @Value("${webwolf.port}") String webWolfPort,
       @Value("${webwolf.url}") String webWolfURL,
-      @Value("${webwolf.mail.url}") String webWolfMailURL,
-      @Value("${webgoat.url}") String webGoatUrl) {
+      @Value("${webwolf.mail.url}") String webWolfMailURL) {
     this.restTemplate = restTemplate;
     this.webWolfHost = webWolfHost;
     this.webWolfPort = webWolfPort;
     this.webWolfURL = webWolfURL;
     this.webWolfMailURL = webWolfMailURL;
-    this.webGoatUrl = webGoatUrl.replaceAll("/+$", "");
   }
 
   @PostMapping("/PasswordReset/ForgotPassword/create-password-reset-link")
@@ -58,25 +55,15 @@ public class ResetLinkAssignmentForgotPassword implements AssignmentEndpoint {
   public AttackResult sendPasswordResetLink(
       @RequestParam String email, HttpServletRequest request, @CurrentUsername String username) {
     String resetLink = UUID.randomUUID().toString();
-    String recipient = extractRecipient(email);
-    if (!username.equals(recipient)) {
-      return failed(this).feedback("email.send").feedbackArgs(email).build();
-    }
     ResetLinkAssignment.resetLinks.add(resetLink);
-    ResetLinkAssignment.resetLinkRecipients.put(resetLink, recipient);
-    ResetLinkAssignment.userToTomResetLink.put(recipient, resetLink);
+    String host = webWolfHost + ":" + webWolfPort;
     try {
-      sendMailToUser(email, webGoatUrl, resetLink);
+      sendMailToUser(email, host, resetLink);
     } catch (Exception e) {
       return failed(this).output("E-mail can't be send. please try again.").build();
     }
 
     return failed(this).feedback("email.send").feedbackArgs(email).build();
-  }
-
-  private String extractRecipient(String email) {
-    int index = email.indexOf("@");
-    return email.substring(0, index == -1 ? email.length() : index);
   }
 
   private void sendMailToUser(String email, String host, String resetLink) {

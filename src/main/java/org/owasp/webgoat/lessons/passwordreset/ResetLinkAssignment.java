@@ -49,14 +49,13 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
   static Map<String, String> userToTomResetLink = new HashMap<>();
-  static Map<String, String> resetLinkRecipients = new HashMap<>();
   static Map<String, String> usersToTomPassword = Maps.newHashMap();
   static List<String> resetLinks = new ArrayList<>();
 
   static final String TEMPLATE =
       """
       Hi, you requested a password reset link, please use this <a target='_blank'
-       href='%s/PasswordReset/reset/reset-password/%s'>link</a> to reset your
+       href='http://%s/WebGoat/PasswordReset/reset/reset-password/%s'>link</a> to reset your
        password.
 
       If you did not request this password change you can ignore this message.
@@ -115,15 +114,10 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
       return modelAndView;
     }
-    if (username.equals(resetLinkRecipients.get(form.getResetLink()))
-        && checkIfLinkIsFromTom(form.getResetLink(), username)) {
+    if (checkIfLinkIsFromTom(form.getResetLink(), username)) {
       usersToTomPassword.put(username, form.getPassword());
-    } else {
-      modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
-      return modelAndView;
     }
     resetLinks.remove(form.getResetLink());
-    resetLinkRecipients.remove(form.getResetLink());
     userToTomResetLink.remove(username, form.getResetLink());
     modelAndView.setViewName(VIEW_FORMATTER.formatted("success"));
     return modelAndView;
