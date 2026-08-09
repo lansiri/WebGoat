@@ -4,11 +4,9 @@
  */
 package org.owasp.webgoat.lessons.hijacksession.cas;
 
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.DoublePredicate;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -24,10 +22,7 @@ import org.springframework.web.context.annotation.ApplicationScope;
 @Component
 public class HijackSessionAuthenticationProvider implements AuthenticationProvider<Authentication> {
 
-  private Queue<String> sessions = new LinkedList<>();
-  protected static final int MAX_SESSIONS = 50;
-
-  private static final DoublePredicate PROBABILITY_DOUBLE_PREDICATE = pr -> pr < 0.75;
+  private final Map<String, String> sessions = new ConcurrentHashMap<>();
   private static final Supplier<String> GENERATE_SESSION_ID =
       () -> UUID.randomUUID().toString();
   public static final Supplier<Authentication> AUTHENTICATION_SUPPLIER =
@@ -35,12 +30,17 @@ public class HijackSessionAuthenticationProvider implements AuthenticationProvid
 
   @Override
   public Authentication authenticate(Authentication authentication) {
+    return authenticate(authentication, null);
+  }
+
+  public Authentication authenticate(Authentication authentication, String sessionId) {
     if (authentication == null) {
       return AUTHENTICATION_SUPPLIER.get();
     }
 
     if (StringUtils.isNotEmpty(authentication.getId())
-        && sessions.contains(authentication.getId())) {
+        && StringUtils.isNotEmpty(sessionId)
+        && sessionId.equals(sessions.get(authentication.getId()))) {
       authentication.setAuthenticated(true);
       return authentication;
     }
@@ -49,24 +49,13 @@ public class HijackSessionAuthenticationProvider implements AuthenticationProvid
       authentication.setId(GENERATE_SESSION_ID.get());
     }
 
-    authorizedUserAutoLogin();
-
     return authentication;
   }
 
-  protected void authorizedUserAutoLogin() {
-    if (!PROBABILITY_DOUBLE_PREDICATE.test(ThreadLocalRandom.current().nextDouble())) {
-      Authentication authentication = AUTHENTICATION_SUPPLIER.get();
-      authentication.setAuthenticated(true);
-      addSession(authentication.getId());
+  protected void registerAuthenticatedSession(String token, String ownerSessionId) {
+    if (StringUtils.isNotEmpty(token) && StringUtils.isNotEmpty(ownerSessionId)) {
+      sessions.put(token, ownerSessionId);
     }
-  }
-
-  protected boolean addSession(String sessionId) {
-    if (sessions.size() >= MAX_SESSIONS) {
-      sessions.remove();
-    }
-    return sessions.add(sessionId);
   }
 
   protected int getSessionsSize() {

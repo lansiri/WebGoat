@@ -37,15 +37,24 @@ class HijackSessionAuthenticationProviderTest {
 
   @Test
   void testAuthenticated() {
-    String id = "anyId";
-    provider.addSession(id);
+    String id = "registered-token";
+    String ownerSessionId = "owner-http-session";
+    provider.registerAuthenticatedSession(id, ownerSessionId);
 
-    Authentication auth = provider.authenticate(Authentication.builder().id(id).build());
+    Authentication auth =
+        provider.authenticate(Authentication.builder().id(id).build(), ownerSessionId);
 
     assertThat(auth.getId(), is(id));
     assertThat(auth.isAuthenticated(), is(true));
 
-    auth = provider.authenticate(Authentication.builder().id("otherId").build());
+    auth =
+        provider.authenticate(Authentication.builder().id(id).build(), "different-http-session");
+
+    assertThat(auth.getId(), is(id));
+    assertThat(auth.isAuthenticated(), is(false));
+
+    auth =
+        provider.authenticate(Authentication.builder().id("otherId").build(), ownerSessionId);
 
     assertThat(auth.getId(), is("otherId"));
     assertThat(auth.isAuthenticated(), is(false));
@@ -88,13 +97,13 @@ class HijackSessionAuthenticationProviderTest {
   }
 
   @Test
-  void testMaxSessions() {
-    for (int i = 0; i <= HijackSessionAuthenticationProvider.MAX_SESSIONS + 1; i++) {
-      provider.authorizedUserAutoLogin();
-      provider.addSession(null);
-    }
+  void anonymousAuthenticationDoesNotMintAPrivilegedSession() {
+    Authentication auth =
+        provider.authenticate(
+            Authentication.builder().name("anonymous").credentials("none").build(), "http-session");
 
-    assertThat(provider.getSessionsSize(), is(HijackSessionAuthenticationProvider.MAX_SESSIONS));
+    assertThat(auth.isAuthenticated(), is(false));
+    assertThat(provider.getSessionsSize(), is(0));
   }
 
   private static Stream<Arguments> authenticationForCookieValues() {
