@@ -8,6 +8,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.DisplayName;
@@ -49,6 +53,22 @@ class HijackSessionAuthenticationProviderTest {
 
     assertThat(auth.getId(), is("otherId"));
     assertThat(auth.isAuthenticated(), is(false));
+  }
+
+  @Test
+  void rejectsAnExpiredPrivilegedSessionId() {
+    Instant issuedAt = Instant.parse("2026-08-09T12:00:00Z");
+    MutableClock clock = new MutableClock(issuedAt);
+    HijackSessionAuthenticationProvider expiringProvider =
+        new HijackSessionAuthenticationProvider(clock);
+    expiringProvider.addSession("expired-id");
+    clock.setInstant(issuedAt.plusSeconds(301));
+
+    Authentication expired =
+        expiringProvider.authenticate(Authentication.builder().id("expired-id").build());
+
+    assertThat(expired.isAuthenticated(), is(false));
+    assertThat(expiringProvider.getSessionsSize(), is(0));
   }
 
   @Test
@@ -102,5 +122,32 @@ class HijackSessionAuthenticationProviderTest {
         Arguments.of((Object) null),
         Arguments.of(Authentication.builder().name("any").credentials("any").build()),
         Arguments.of(Authentication.builder().id("any").build()));
+  }
+
+  private static final class MutableClock extends Clock {
+    private Instant instant;
+
+    private MutableClock(Instant instant) {
+      this.instant = instant;
+    }
+
+    void setInstant(Instant instant) {
+      this.instant = instant;
+    }
+
+    @Override
+    public ZoneId getZone() {
+      return ZoneOffset.UTC;
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return this;
+    }
+
+    @Override
+    public Instant instant() {
+      return instant;
+    }
   }
 }

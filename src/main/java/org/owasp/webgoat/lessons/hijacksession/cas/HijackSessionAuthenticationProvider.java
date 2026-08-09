@@ -4,6 +4,9 @@
  */
 package org.owasp.webgoat.lessons.hijacksession.cas;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
@@ -24,14 +27,24 @@ import org.springframework.web.context.annotation.ApplicationScope;
 @Component
 public class HijackSessionAuthenticationProvider implements AuthenticationProvider<Authentication> {
 
-  private Queue<String> sessions = new LinkedList<>();
+  private final Queue<SessionGrant> sessions = new LinkedList<>();
   protected static final int MAX_SESSIONS = 50;
+  private static final Duration SESSION_LIFETIME = Duration.ofMinutes(5);
+  private final Clock clock;
 
   private static final DoublePredicate PROBABILITY_DOUBLE_PREDICATE = pr -> pr < 0.75;
   private static final Supplier<String> GENERATE_SESSION_ID =
       () -> UUID.randomUUID().toString();
   public static final Supplier<Authentication> AUTHENTICATION_SUPPLIER =
       () -> Authentication.builder().id(GENERATE_SESSION_ID.get()).build();
+
+  public HijackSessionAuthenticationProvider() {
+    this(Clock.systemUTC());
+  }
+
+  HijackSessionAuthenticationProvider(Clock clock) {
+    this.clock = clock;
+  }
 
   @Override
   public Authentication authenticate(Authentication authentication) {
@@ -40,7 +53,7 @@ public class HijackSessionAuthenticationProvider implements AuthenticationProvid
     }
 
     if (StringUtils.isNotEmpty(authentication.getId())
-        && sessions.contains(authentication.getId())) {
+        && hasActiveSession(authentication.getId())) {
       authentication.setAuthenticated(true);
       return authentication;
     }
@@ -63,13 +76,26 @@ public class HijackSessionAuthenticationProvider implements AuthenticationProvid
   }
 
   protected boolean addSession(String sessionId) {
+    removeExpiredSessions();
     if (sessions.size() >= MAX_SESSIONS) {
       sessions.remove();
     }
-    return sessions.add(sessionId);
+    return sessions.add(new SessionGrant(sessionId, clock.instant().plus(SESSION_LIFETIME)));
   }
 
   protected int getSessionsSize() {
     return sessions.size();
   }
+
+  private boolean hasActiveSession(String sessionId) {
+    removeExpiredSessions();
+    return sessions.stream().anyMatch(session -> session.id().equals(sessionId));
+  }
+
+  private void removeExpiredSessions() {
+    Instant now = clock.instant();
+    sessions.removeIf(session -> !session.expiresAt().isAfter(now));
+  }
+
+  private record SessionGrant(String id, Instant expiresAt) {}
 }
