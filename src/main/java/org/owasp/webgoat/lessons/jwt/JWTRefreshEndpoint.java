@@ -13,12 +13,13 @@ import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.security.SecureRandom;
-import java.util.concurrent.ConcurrentHashMap;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -42,7 +43,7 @@ public class JWTRefreshEndpoint implements AssignmentEndpoint {
 
   public static final String PASSWORD = "bm5nhSkxCXZkKRy4";
   private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
-  private static final Map<String, String> validRefreshTokens = new ConcurrentHashMap<>();
+  private static final List<String> validRefreshTokens = new ArrayList<>();
 
   @PostMapping(
       value = "/JWT/refresh/login",
@@ -75,7 +76,7 @@ public class JWTRefreshEndpoint implements AssignmentEndpoint {
     byte[] refreshTokenBytes = new byte[32];
     new SecureRandom().nextBytes(refreshTokenBytes);
     String refreshToken = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(refreshTokenBytes);
-    validRefreshTokens.put(refreshToken, user);
+    validRefreshTokens.add(refreshToken);
     tokenJson.put("access_token", token);
     tokenJson.put("refresh_token", refreshToken);
     return tokenJson;
@@ -123,7 +124,8 @@ public class JWTRefreshEndpoint implements AssignmentEndpoint {
 
     if (user == null || refreshToken == null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    } else if (validRefreshTokens.remove(refreshToken, user)) {
+    } else if (validRefreshTokens.contains(refreshToken)) {
+      validRefreshTokens.remove(refreshToken);
       return ok(createNewTokens(user));
     } else {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

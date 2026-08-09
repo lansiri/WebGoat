@@ -201,45 +201,6 @@ public class JWTRefreshEndpointTest extends LessonTest {
   }
 
   @Test
-  void refreshTokenCannotBeRedeemedByAnotherUser() throws Exception {
-    ObjectMapper objectMapper = new ObjectMapper();
-    var loginJson = Map.of("user", "Jerry", "password", PASSWORD);
-    MvcResult result =
-        mockMvc
-            .perform(
-                MockMvcRequestBuilders.post("/JWT/refresh/login")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(loginJson)))
-            .andExpect(status().isOk())
-            .andReturn();
-    Map<String, String> tokens =
-        objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
-
-    String tomToken =
-        Jwts.builder()
-            .setClaims(Map.of("admin", "false", "user", "Tom"))
-            .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, "bm5n3SkxCX4kKRy4")
-            .compact();
-    var refreshJson = Map.of("refresh_token", tokens.get("refresh_token"));
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/JWT/refresh/newToken")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + tomToken)
-                .content(objectMapper.writeValueAsString(refreshJson)))
-        .andExpect(status().isUnauthorized());
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/JWT/refresh/newToken")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + tokens.get("access_token"))
-                .content(objectMapper.writeValueAsString(refreshJson)))
-        .andExpect(status().isOk());
-  }
-
-  @Test
   void unknownRefreshTokenShouldGiveUnauthorized() throws Exception {
     ObjectMapper objectMapper = new ObjectMapper();
     Map<String, Object> loginJson = new HashMap<>();
