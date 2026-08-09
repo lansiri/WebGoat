@@ -5,7 +5,6 @@
 package org.owasp.webgoat.lessons.csrf;
 
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 import static org.springframework.http.MediaType.ALL_VALUE;
 
 import com.google.common.collect.Lists;
@@ -78,14 +77,6 @@ public class ForgedReviews implements AssignmentEndpoint {
     if (validateReq == null || !validateReq.equals(weakAntiCSRF) || !refererMatchesHost(request)) {
       return failed(this).feedback("csrf-you-forgot-something").build();
     }
-    Review review = new Review();
-    review.setText(reviewText);
-    review.setDateTime(LocalDateTime.now().format(fmt));
-    review.setUser(username);
-    review.setStars(stars);
-    var reviews = userReviews.getOrDefault(username, new ArrayList<>());
-    reviews.add(review);
-    userReviews.put(username, reviews);
     return failed(this).feedback("csrf-you-forgot-something").build();
   }
 
