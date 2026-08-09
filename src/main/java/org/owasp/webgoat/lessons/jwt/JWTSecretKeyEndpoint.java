@@ -74,7 +74,7 @@ public class JWTSecretKeyEndpoint implements AssignmentEndpoint {
         String user = (String) claims.get("username");
 
         if (WEBGOAT_USER.equalsIgnoreCase(user)) {
-          return failed(this).feedback("jwt-invalid-token").build();
+          return success(this).build();
         } else {
           return failed(this).feedback("jwt-secret-incorrect-user").feedbackArgs(user).build();
         }
