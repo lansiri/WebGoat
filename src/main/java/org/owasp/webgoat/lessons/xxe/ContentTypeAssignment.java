@@ -7,6 +7,7 @@ package org.owasp.webgoat.lessons.xxe;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
+import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +60,7 @@ public class ContentTypeAssignment implements AssignmentEndpoint {
         Comment comment = comments.parseXml(commentStr, true);
         comments.addComment(comment, user, false);
         if (checkSolution(comment)) {
-          attackResult = failed(this).build();
+          attackResult = success(this).build();
         }
       } catch (Exception e) {
         String error = ExceptionUtils.getStackTrace(e);
