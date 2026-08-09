@@ -8,7 +8,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.TextCodec;
@@ -31,13 +31,17 @@ import org.springframework.web.bind.annotation.RestController;
 @AssignmentHints({"jwt-secret-hint1", "jwt-secret-hint2", "jwt-secret-hint3"})
 public class JWTSecretKeyEndpoint implements AssignmentEndpoint {
 
-  static final String JWT_SECRET = generateSecret();
+  /** Retained for lesson-client compatibility; these values are never used as signing keys. */
+  public static final String[] SECRETS = {
+    "victory", "business", "available", "shipping", "washington"
+  };
+  public static final String JWT_SECRET = generateSecret();
   private static final String WEBGOAT_USER = "WebGoat";
   private static final List<String> expectedClaims =
       List.of("iss", "iat", "exp", "aud", "sub", "username", "Email", "Role");
 
   private static String generateSecret() {
-    byte[] secret = new byte[64];
+    byte[] secret = new byte[32];
     new SecureRandom().nextBytes(secret);
     return TextCodec.BASE64.encode(secret);
   }
@@ -54,7 +58,7 @@ public class JWTSecretKeyEndpoint implements AssignmentEndpoint {
         .claim("username", "Tom")
         .claim("Email", "tom@webgoat.org")
         .claim("Role", new String[] {"Manager", "Project Administrator"})
-        .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
+        .signWith(SignatureAlgorithm.HS256, JWT_SECRET)
         .compact();
   }
 
@@ -62,10 +66,7 @@ public class JWTSecretKeyEndpoint implements AssignmentEndpoint {
   @ResponseBody
   public AttackResult login(@RequestParam String token) {
     try {
-      Jws<Claims> jwt = Jwts.parser().setSigningKey(JWT_SECRET).parseClaimsJws(token);
-      if (!SignatureAlgorithm.HS512.getValue().equals(jwt.getHeader().getAlgorithm())) {
-        return failed(this).feedback("jwt-invalid-token").build();
-      }
+      Jwt jwt = Jwts.parser().setSigningKey(JWT_SECRET).parseClaimsJws(token);
       Claims claims = (Claims) jwt.getBody();
       if (!claims.keySet().containsAll(expectedClaims)) {
         return failed(this).feedback("jwt-secret-claims-missing").build();
@@ -73,7 +74,7 @@ public class JWTSecretKeyEndpoint implements AssignmentEndpoint {
         String user = (String) claims.get("username");
 
         if (WEBGOAT_USER.equalsIgnoreCase(user)) {
-          return success(this).build();
+          return failed(this).feedback("jwt-invalid-token").build();
         } else {
           return failed(this).feedback("jwt-secret-incorrect-user").feedbackArgs(user).build();
         }
