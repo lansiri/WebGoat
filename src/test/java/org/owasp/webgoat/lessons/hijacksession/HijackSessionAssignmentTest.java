@@ -7,7 +7,6 @@ package org.owasp.webgoat.lessons.hijacksession;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -41,7 +40,7 @@ class HijackSessionAssignmentTest extends LessonTest {
   void testValidCookie() throws Exception {
     lenient().when(authenticationMock.isAuthenticated()).thenReturn(true);
     lenient()
-        .when(providerMock.authenticate(any(Authentication.class), anyString()))
+        .when(providerMock.authenticate(any(Authentication.class)))
         .thenReturn(authenticationMock);
 
     Cookie cookie = new Cookie(COOKIE_NAME, "value");
@@ -60,7 +59,7 @@ class HijackSessionAssignmentTest extends LessonTest {
   void testBlankCookie() throws Exception {
     lenient().when(authenticationMock.isAuthenticated()).thenReturn(false);
     lenient()
-        .when(providerMock.authenticate(any(Authentication.class), anyString()))
+        .when(providerMock.authenticate(any(Authentication.class)))
         .thenReturn(authenticationMock);
     ResultActions result =
         mockMvc.perform(

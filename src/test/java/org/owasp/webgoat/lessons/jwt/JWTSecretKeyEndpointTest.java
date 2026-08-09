@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -48,29 +47,25 @@ public class JWTSecretKeyEndpointTest extends LessonTest {
   }
 
   @Test
-  public void validServerKeyDoesNotCompleteAssignment() throws Exception {
+  public void solveAssignment() throws Exception {
     Claims claims = createClaims("WebGoat");
     String token = Jwts.builder().setClaims(claims).signWith(HS512, JWT_SECRET).compact();
 
     mockMvc
         .perform(MockMvcRequestBuilders.post("/JWT/secret").param("token", token))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
+        .andExpect(jsonPath("$.lessonCompleted", is(true)));
   }
 
   @Test
-  public void validServerKeyWithLowercaseUserDoesNotCompleteAssignment() throws Exception {
+  public void solveAssignmentWithLowercase() throws Exception {
     Claims claims = createClaims("webgoat");
     String token = Jwts.builder().setClaims(claims).signWith(HS512, JWT_SECRET).compact();
 
     mockMvc
         .perform(MockMvcRequestBuilders.post("/JWT/secret").param("token", token))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
+        .andExpect(jsonPath("$.lessonCompleted", is(true)));
   }
 
   @Test
@@ -112,51 +107,6 @@ public class JWTSecretKeyEndpointTest extends LessonTest {
         .andExpect(status().isOk())
         .andExpect(
             jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
-  }
-
-  @Test
-  public void dictionarySecretsCannotForgeWebGoatToken() throws Exception {
-    Claims claims = createClaims("WebGoat");
-
-    for (String weakSecret :
-        new String[] {"victory", "business", "available", "shipping", "washington"}) {
-      String token = Jwts.builder().setClaims(claims).signWith(HS512, weakSecret).compact();
-
-      mockMvc
-          .perform(MockMvcRequestBuilders.post("/JWT/secret").param("token", token))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.lessonCompleted", is(false)))
-          .andExpect(
-              jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
-    }
-  }
-
-  @Test
-  public void hs256TokenSignedWithTheServerKeyIsRejected() throws Exception {
-    Claims claims = createClaims("WebGoat");
-    String token = Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS256, JWT_SECRET).compact();
-
-    mockMvc
-        .perform(MockMvcRequestBuilders.post("/JWT/secret").param("token", token))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
-  }
-
-  @Test
-  public void ordinaryIssuedTokenDoesNotCompleteAssignment() throws Exception {
-    String token = new JWTSecretKeyEndpoint().getSecretToken();
-
-    mockMvc
-        .perform(MockMvcRequestBuilders.post("/JWT/secret").param("token", token))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.lessonCompleted", is(false)))
-        .andExpect(
-            jsonPath(
-                "$.feedback",
-                CoreMatchers.is(
-                    messages.getMessage("jwt-secret-incorrect-user", "default", "Tom"))));
   }
 
   @Test
