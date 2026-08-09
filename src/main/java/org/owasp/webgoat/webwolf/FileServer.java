@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -72,7 +73,16 @@ public class FileServer {
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      Path uploadDirectory = destinationDir.toPath().toRealPath();
+      String submittedName = multipartFile.getOriginalFilename();
+      if (submittedName == null || submittedName.isBlank()) {
+        throw new IOException("A file name is required");
+      }
+      Path destinationFile = uploadDirectory.resolve(submittedName).normalize();
+      if (!destinationFile.startsWith(uploadDirectory)
+          || !destinationFile.getFileName().toString().equals(submittedName)) {
+        throw new IOException("Invalid file name");
+      }
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
