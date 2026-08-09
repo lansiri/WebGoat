@@ -48,6 +48,13 @@ public class EncodingAssignment implements AssignmentEndpoint {
       @RequestParam String answer_user,
       @RequestParam String answer_pwd) {
     String basicAuth = (String) request.getSession().getAttribute("basicAuth");
-    return failed(this).feedback("crypto-encoding.empty").build();
+    if (basicAuth != null
+        && answer_user != null
+        && answer_pwd != null
+        && basicAuth.equals(getBasicAuth(answer_user, answer_pwd))) {
+      return success(this).feedback("crypto-encoding.success").build();
+    } else {
+      return failed(this).feedback("crypto-encoding.empty").build();
+    }
   }
 }
