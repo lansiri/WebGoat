@@ -45,7 +45,7 @@ public class StoredXssComments implements AssignmentEndpoint {
         new Comment(
             "secUriTy",
             LocalDateTime.now().format(fmt),
-            "<script>console.warn('unit test me')</script>Comment for Unit Testing"));
+            HtmlUtils.htmlEscape("<script>console.warn('unit test me')</script>Comment for Unit Testing")));
     comments.add(new Comment("webgoat", LocalDateTime.now().format(fmt), "This comment is safe"));
     comments.add(new Comment("guest", LocalDateTime.now().format(fmt), "This one is safe too."));
     comments.add(
