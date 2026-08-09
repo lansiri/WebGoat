@@ -4,7 +4,14 @@
  */
 package org.owasp.webgoat.lessons.sqlinjection.introduction;
 
+import static java.sql.ResultSet.CONCUR_READ_ONLY;
+import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
+import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -37,8 +44,22 @@ public class SqlInjectionLesson2 implements AssignmentEndpoint {
   }
 
   protected AttackResult injectableQuery(String query) {
-    // This endpoint previously accepted an entire SQL program. There is no safe parameter to bind
-    // in that API, so the only secure behavior is to refuse execution.
-    return failed(this).feedback("sql-injection.2.failed").build();
+    try (var connection = dataSource.getConnection()) {
+      Statement statement = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
+      ResultSet results = statement.executeQuery(query);
+      StringBuilder output = new StringBuilder();
+
+      results.first();
+
+      if (results.getString("department").equals("Marketing")) {
+        output.append("<span class='feedback-positive'>" + query + "</span>");
+        output.append(SqlInjectionLesson8.generateTable(results));
+        return success(this).feedback("sql-injection.2.success").output(output.toString()).build();
+      } else {
+        return failed(this).feedback("sql-injection.2.failed").output(output.toString()).build();
+      }
+    } catch (SQLException sqle) {
+      return failed(this).feedback("sql-injection.2.failed").output(sqle.getMessage()).build();
+    }
   }
 }
