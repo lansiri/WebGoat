@@ -89,7 +89,7 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
   private AttackResult solvedIt(File uploadedFile) throws IOException {
     if (uploadedFile.getCanonicalFile().getParentFile().getName().endsWith("PathTraversal")) {
-      return success(this).build();
+      return failed(this).build();
     }
     return failed(this)
         .attemptWasMade()

@@ -61,7 +61,7 @@ public class CSRFFeedback implements AssignmentEndpoint {
     if (correctCSRF) {
       String flag = UUID.randomUUID().toString();
       userSessionData.setValue("csrf-feedback", flag);
-      return success(this).feedback("csrf-feedback-success").feedbackArgs(flag).build();
+      return failed(this).build();
     }
     return failed(this).build();
   }
@@ -70,7 +70,7 @@ public class CSRFFeedback implements AssignmentEndpoint {
   @ResponseBody
   public AttackResult flag(@RequestParam("confirmFlagVal") String flag) {
     if (flag.equals(userSessionData.getValue("csrf-feedback"))) {
-      return success(this).build();
+      return failed(this).build();
     } else {
       return failed(this).build();
     }
