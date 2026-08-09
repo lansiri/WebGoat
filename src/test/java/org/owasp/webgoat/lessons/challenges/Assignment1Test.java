@@ -4,9 +4,12 @@
  */
 package org.owasp.webgoat.lessons.challenges;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.net.InetAddress;
+import java.util.Base64;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,5 +52,19 @@ class Assignment1Test extends LessonTest {
         .andExpect(
             jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("assignment.not.solved"))))
         .andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
+  }
+
+  @Test
+  void logoDoesNotExposeTheStegoCarrier() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get("/challenge/logo"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(org.springframework.http.MediaType.IMAGE_PNG))
+        .andExpect(
+            content()
+                .bytes(
+                    Base64.getDecoder()
+                        .decode(
+                            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8PgAAAABJRU5ErkJggg==")));
   }
 }
