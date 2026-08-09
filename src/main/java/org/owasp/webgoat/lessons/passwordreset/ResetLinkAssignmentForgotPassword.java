@@ -54,11 +54,6 @@ public class ResetLinkAssignmentForgotPassword implements AssignmentEndpoint {
   @ResponseBody
   public AttackResult sendPasswordResetLink(
       @RequestParam String email, HttpServletRequest request, @CurrentUsername String username) {
-    int at = email.indexOf("@");
-    String requestedUsername = email.substring(0, at == -1 ? email.length() : at);
-    if (!username.equalsIgnoreCase(requestedUsername)) {
-      return failed(this).feedback("email.send").feedbackArgs(email).build();
-    }
     String resetLink = UUID.randomUUID().toString();
     ResetLinkAssignment.resetLinks.add(resetLink);
     String host = webWolfHost + ":" + webWolfPort;

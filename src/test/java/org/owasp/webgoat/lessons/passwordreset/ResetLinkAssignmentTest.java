@@ -80,7 +80,7 @@ class ResetLinkAssignmentTest extends LessonTest {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/PasswordReset/ForgotPassword/create-password-reset-link")
-                .param("email", "webgoat@webgoat-cloud.org")
+                .param("email", TOM_EMAIL)
                 .header(HttpHeaders.HOST, webWolfHost + ":" + webWolfPort))
         .andExpect(status().isOk());
     Assertions.assertThat(ResetLinkAssignment.resetLinks).isNotEmpty();
@@ -98,19 +98,5 @@ class ResetLinkAssignmentTest extends LessonTest {
 
     Assertions.assertThat(resourceLoader.getResource(mvcResult.getModelAndView().getViewName()))
         .isNotNull();
-  }
-
-  @Test
-  void mismatchedEmailDoesNotCreateResetLink() throws Exception {
-    int linksBefore = ResetLinkAssignment.resetLinks.size();
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/PasswordReset/ForgotPassword/create-password-reset-link")
-                .param("email", TOM_EMAIL)
-                .header(HttpHeaders.HOST, webWolfHost + ":" + webWolfPort))
-        .andExpect(status().isOk());
-
-    Assertions.assertThat(ResetLinkAssignment.resetLinks).hasSize(linksBefore);
   }
 }
