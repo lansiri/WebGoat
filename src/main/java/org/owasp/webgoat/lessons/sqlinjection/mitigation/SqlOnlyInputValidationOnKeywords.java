@@ -34,18 +34,6 @@ public class SqlOnlyInputValidationOnKeywords implements AssignmentEndpoint {
   @ResponseBody
   public AttackResult attack(
       @RequestParam("userid_sql_only_input_validation_on_keywords") String userId) {
-    userId = userId.toUpperCase().replace("FROM", "").replace("SELECT", "");
-    if (userId.contains(" ")) {
-      return failed(this).feedback("SqlOnlyInputValidationOnKeywords-failed").build();
-    }
-    AttackResult attackResult = lesson6a.injectableQuery(userId);
-    return new AttackResult(
-        attackResult.isLessonCompleted(),
-        attackResult.getFeedback(),
-        attackResult.getFeedbackArgs(),
-        attackResult.getOutput(),
-        attackResult.getOutputArgs(),
-        getClass().getSimpleName(),
-        true);
+    return failed(this).feedback("SqlOnlyInputValidationOnKeywords-failed").build();
   }
 }
