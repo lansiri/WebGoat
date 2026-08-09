@@ -62,11 +62,12 @@ public class Requests {
     /* do not show certain traces to other users in a classroom setup */
     if (req.getUri().getPath().contains("/files") && !req.getUri().getPath().contains(username)) {
       allowed = false;
-    } else if (req.getUri().getPath().contains("/landing")
-        && req.getUri().getQuery() != null
-        && req.getUri().getQuery().contains("uniqueCode")
-        && !req.getUri().getQuery().contains(StringUtils.reverse(username))) {
-      allowed = false;
+    } else if (req.getUri().getPath().contains("/landing")) {
+      String query = req.getUri().getQuery();
+      allowed =
+          query != null
+              && query.contains("uniqueCode")
+              && query.contains(StringUtils.reverse(username));
     }
 
     return allowed;
