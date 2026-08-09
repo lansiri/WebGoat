@@ -4,7 +4,7 @@
  */
 package org.owasp.webgoat.lessons.challenges.challenge7;
 
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
+import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
@@ -90,7 +90,7 @@ public class Assignment7 implements AssignmentEndpoint {
         restTemplate.postForEntity(webWolfMailURL, mail, Object.class);
       }
     }
-    return success(this).feedback("email.send").feedbackArgs(email).build();
+    return failed(this).feedback("email.send").feedbackArgs(email).build();
   }
 
   @GetMapping(value = "/challenge/7/.git", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

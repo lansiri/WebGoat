@@ -101,7 +101,7 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
     }
     if (users.containsKey(cookieUsername)) {
       if (cookieUsername.equals(ATTACK_USERNAME)) {
-        return success(this).build();
+        return failed(this).feedback("spoofcookie.wrong-cookie").build();
       }
       return failed(this)
           .feedback("spoofcookie.cookie-login")

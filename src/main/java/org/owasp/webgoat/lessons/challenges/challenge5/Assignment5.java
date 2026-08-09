@@ -47,7 +47,7 @@ public class Assignment5 implements AssignmentEndpoint {
         statement.setString(2, password_login);
         try (ResultSet resultSet = statement.executeQuery()) {
           if (resultSet.next()) {
-            return success(this).feedback("challenge.solved").feedbackArgs(flags.getFlag(5)).build();
+            return failed(this).feedback("challenge.close").build();
           }
           return failed(this).feedback("challenge.close").build();
         }

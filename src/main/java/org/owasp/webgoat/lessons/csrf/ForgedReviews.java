@@ -86,7 +86,7 @@ public class ForgedReviews implements AssignmentEndpoint {
     var reviews = userReviews.getOrDefault(username, new ArrayList<>());
     reviews.add(review);
     userReviews.put(username, reviews);
-    return success(this).feedback("csrf-review.success").build();
+    return failed(this).feedback("csrf-you-forgot-something").build();
   }
 
   private boolean refererMatchesHost(HttpServletRequest request) {
