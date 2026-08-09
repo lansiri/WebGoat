@@ -18,6 +18,8 @@ import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,6 +41,9 @@ public class SigningAssignment implements AssignmentEndpoint {
   public String getPrivateKey(HttpServletRequest request)
       throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Private keys are not exportable");
+    /*
+
     String privateKey = (String) request.getSession().getAttribute("privateKeyString");
     if (privateKey == null) {
       KeyPair keyPair = CryptoUtil.generateKeyPair();
@@ -47,6 +52,7 @@ public class SigningAssignment implements AssignmentEndpoint {
       request.getSession().setAttribute("keyPair", keyPair);
     }
     return privateKey;
+    */
   }
 
   @PostMapping("/crypto/signing/verify")
