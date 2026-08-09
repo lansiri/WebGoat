@@ -55,7 +55,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
   static final String TEMPLATE =
       """
       Hi, you requested a password reset link, please use this <a target='_blank'
-       href='http://%s/WebGoat/PasswordReset/reset/reset-password/%s'>link</a> to reset your
+       href='%s/PasswordReset/reset/reset-password/%s'>link</a> to reset your
        password.
 
       If you did not request this password change you can ignore this message.
