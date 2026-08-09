@@ -41,7 +41,7 @@ public class JWTSecretKeyEndpoint implements AssignmentEndpoint {
       List.of("iss", "iat", "exp", "aud", "sub", "username", "Email", "Role");
 
   private static String generateSecret() {
-    byte[] secret = new byte[32];
+    byte[] secret = new byte[64];
     new SecureRandom().nextBytes(secret);
     return TextCodec.BASE64.encode(secret);
   }
@@ -58,7 +58,7 @@ public class JWTSecretKeyEndpoint implements AssignmentEndpoint {
         .claim("username", "Tom")
         .claim("Email", "tom@webgoat.org")
         .claim("Role", new String[] {"Manager", "Project Administrator"})
-        .signWith(SignatureAlgorithm.HS256, JWT_SECRET)
+        .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
         .compact();
   }
 
@@ -74,7 +74,7 @@ public class JWTSecretKeyEndpoint implements AssignmentEndpoint {
         String user = (String) claims.get("username");
 
         if (WEBGOAT_USER.equalsIgnoreCase(user)) {
-          return failed(this).feedback("jwt-invalid-token").build();
+          return success(this).build();
         } else {
           return failed(this).feedback("jwt-secret-incorrect-user").feedbackArgs(user).build();
         }
