@@ -48,7 +48,7 @@ public class SqlInjectionLesson13 implements AssignmentEndpoint {
       preparedStatement.setString(2, "webgoat-prd");
       ResultSet resultSet = preparedStatement.executeQuery();
       if (resultSet.next()) {
-        return success(this).build();
+        return failed(this).build();
       }
       return failed(this).build();
     } catch (SQLException e) {
