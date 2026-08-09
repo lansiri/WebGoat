@@ -53,9 +53,9 @@ public class ResetLinkAssignmentForgotPassword implements AssignmentEndpoint {
   @PostMapping("/PasswordReset/ForgotPassword/create-password-reset-link")
   @ResponseBody
   public AttackResult sendPasswordResetLink(
-    @RequestParam String email, HttpServletRequest request, @CurrentUsername String username) {
+      @RequestParam String email, HttpServletRequest request, @CurrentUsername String username) {
     String resetLink = UUID.randomUUID().toString();
-    ResetLinkAssignment.registerResetLink(resetLink);
+    ResetLinkAssignment.resetLinks.add(resetLink);
     String host = webWolfHost + ":" + webWolfPort;
     try {
       sendMailToUser(email, host, resetLink);
