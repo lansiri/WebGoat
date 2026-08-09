@@ -72,7 +72,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
         connection.setAutoCommit(true);
         output.append(
             SqlInjectionLesson8.generateTable(this.getEmployeesDataOrderBySalaryDesc(connection)));
-        return success(this).feedback("sql-injection.9.success").output(output.toString()).build();
+        return failed(this).feedback("sql-injection.9.no.results").output(output.toString()).build();
       }
       // failed roolback
       connection.rollback();
