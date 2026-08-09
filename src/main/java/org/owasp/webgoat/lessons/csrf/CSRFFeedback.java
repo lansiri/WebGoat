@@ -13,6 +13,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -58,6 +59,8 @@ public class CSRFFeedback implements AssignmentEndpoint {
             && request.getContentType().contains(MediaType.TEXT_PLAIN_VALUE);
     correctCSRF &= refererMatchesHost(request);
     if (correctCSRF) {
+      String flag = UUID.randomUUID().toString();
+      userSessionData.setValue("csrf-feedback", flag);
       return failed(this).build();
     }
     return failed(this).build();

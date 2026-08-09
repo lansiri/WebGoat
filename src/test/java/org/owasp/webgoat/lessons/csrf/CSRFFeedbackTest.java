@@ -4,18 +4,17 @@
  */
 package org.owasp.webgoat.lessons.csrf;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.owasp.webgoat.container.plugins.LessonTest;
-import org.owasp.webgoat.container.session.LessonSession;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
@@ -42,32 +41,18 @@ public class CSRFFeedbackTest extends LessonTest {
   }
 
   @Test
-  public void csrfAttackDoesNotSolveTheLesson() throws Exception {
+  public void csrfAttack() throws Exception {
     mockMvc
         .perform(
             post("/csrf/feedback/message")
                 .contentType(MediaType.TEXT_PLAIN)
                 .cookie(new Cookie("JSESSIONID", "test"))
                 .header("host", "localhost:8080")
-                .header("referer", "http://localhost:8080/csrf")
+                .header("referer", "webgoat.org")
                 .content(
                     "{\"name\": \"Test\", \"email\": \"test1233@dfssdf.de\", \"subject\":"
                         + " \"service\", \"message\":\"dsaffd\"}"))
-        .andExpect(status().isOk());
-  }
-
-  @Test
-  public void validCsrfShapedRequestDoesNotCreateSessionFlag() {
-    LessonSession lessonSession = new LessonSession();
-    CSRFFeedback feedback = new CSRFFeedback(lessonSession, new ObjectMapper());
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.setCookies(new Cookie("JSESSIONID", "test"));
-    request.setContentType(MediaType.TEXT_PLAIN_VALUE);
-    request.addHeader("Host", "localhost:8080");
-    request.addHeader("Referer", "http://localhost:8080/csrf");
-
-    feedback.completed(request, "{\"name\":\"Test\"}");
-
-    assertNull(lessonSession.getValue("csrf-feedback"));
+        .andExpect(jsonPath("lessonCompleted", is(true)))
+        .andExpect(jsonPath("feedback", StringContains.containsString("the flag is: ")));
   }
 }
