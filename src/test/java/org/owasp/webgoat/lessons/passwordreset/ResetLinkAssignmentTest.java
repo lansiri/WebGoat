@@ -33,6 +33,27 @@ class ResetLinkAssignmentTest extends LessonTest {
   @BeforeEach
   public void setup() {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+    ResetLinkAssignment.resetLinks.clear();
+    ResetLinkAssignment.userToTomResetLink.clear();
+    ResetLinkAssignment.usersToTomPassword.clear();
+  }
+
+  @Test
+  void ownerCanLoginWithPasswordSetThroughOwnedResetFlow() {
+    ResetLinkAssignment.usersToTomPassword.put("owner", "new-password");
+
+    var result = new ResetLinkAssignment().login("new-password", TOM_EMAIL, "owner");
+
+    Assertions.assertThat(result.assignmentSolved()).isTrue();
+  }
+
+  @Test
+  void anotherUsersResetPasswordDoesNotAuthenticateAttacker() {
+    ResetLinkAssignment.usersToTomPassword.put("owner", "new-password");
+
+    var result = new ResetLinkAssignment().login("new-password", TOM_EMAIL, "attacker");
+
+    Assertions.assertThat(result.assignmentSolved()).isFalse();
   }
 
   @Test
