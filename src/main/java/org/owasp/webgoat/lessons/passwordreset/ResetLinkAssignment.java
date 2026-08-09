@@ -49,6 +49,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
   static Map<String, String> userToTomResetLink = new HashMap<>();
+  static Map<String, String> resetLinkRecipients = new HashMap<>();
   static Map<String, String> usersToTomPassword = Maps.newHashMap();
   static List<String> resetLinks = new ArrayList<>();
 
@@ -114,10 +115,15 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
       return modelAndView;
     }
-    if (checkIfLinkIsFromTom(form.getResetLink(), username)) {
+    if (username.equals(resetLinkRecipients.get(form.getResetLink()))
+        && checkIfLinkIsFromTom(form.getResetLink(), username)) {
       usersToTomPassword.put(username, form.getPassword());
+    } else {
+      modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
+      return modelAndView;
     }
     resetLinks.remove(form.getResetLink());
+    resetLinkRecipients.remove(form.getResetLink());
     userToTomResetLink.remove(username, form.getResetLink());
     modelAndView.setViewName(VIEW_FORMATTER.formatted("success"));
     return modelAndView;
