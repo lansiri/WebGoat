@@ -75,7 +75,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       if (passwordTom.equals(PASSWORD_TOM_9)) {
         return failed(this).feedback("login_failed").build();
       } else if (passwordTom.equals(password)) {
-        return failed(this).feedback("login_failed").build();
+        return success(this).build();
       }
     }
     return failed(this).feedback("login_failed.tom").build();
@@ -117,8 +117,6 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
     if (checkIfLinkIsFromTom(form.getResetLink(), username)) {
       usersToTomPassword.put(username, form.getPassword());
     }
-    resetLinks.remove(form.getResetLink());
-    userToTomResetLink.remove(username, form.getResetLink());
     modelAndView.setViewName(VIEW_FORMATTER.formatted("success"));
     return modelAndView;
   }
