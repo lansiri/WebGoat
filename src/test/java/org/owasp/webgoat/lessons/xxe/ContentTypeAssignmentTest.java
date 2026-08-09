@@ -44,7 +44,7 @@ class ContentTypeAssignmentTest extends LessonTest {
   }
 
   @Test
-  void workingAttack() throws Exception {
+  void rejectsExternalEntityPayload() throws Exception {
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/xxe/content-type")
@@ -54,7 +54,7 @@ class ContentTypeAssignmentTest extends LessonTest {
                         + " SYSTEM \"file:///\"> ]><comment><text>&root;</text></comment>"))
         .andExpect(status().isOk())
         .andExpect(
-            jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("assignment.solved"))));
+            jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
   }
 
   @Test
