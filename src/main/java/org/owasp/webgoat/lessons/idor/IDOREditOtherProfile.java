@@ -43,6 +43,12 @@ public class IDOREditOtherProfile implements AssignmentEndpoint {
       @PathVariable("userId") String userId, @RequestBody UserProfile userSubmittedProfile) {
 
     String authUserId = (String) userSessionData.getValue("idor-authenticated-user-id");
+    if (authUserId == null
+        || !authUserId.equals(userId)
+        || userSubmittedProfile.getUserId() == null
+        || !authUserId.equals(userSubmittedProfile.getUserId())) {
+      return failed(this).feedback("idor.edit.profile.failure4").build();
+    }
     // this is where it starts ... accepting the user submitted ID and assuming it will be the same
     // as the logged in userId and not checking for proper authorization
     // Certain roles can sometimes edit others' profiles, but we shouldn't just assume that and let

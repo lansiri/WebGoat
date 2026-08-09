@@ -97,6 +97,9 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
+      if (id != null && !id.matches("(?:[1-9]|10)")) {
+        return ResponseEntity.badRequest().body("Invalid image identifier");
+      }
       var catPicture =
           new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
 
