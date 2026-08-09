@@ -9,6 +9,8 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import static org.springframework.util.StringUtils.hasText;
 
 import com.google.common.collect.Maps;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,9 +50,12 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
   static final String PASSWORD_TOM_9 =
       "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
+  static final Duration RESET_LINK_LIFETIME = Duration.ofMinutes(15);
+  private static final Object RESET_LINK_LOCK = new Object();
   static Map<String, String> userToTomResetLink = new HashMap<>();
   static Map<String, String> usersToTomPassword = Maps.newHashMap();
   static List<String> resetLinks = new ArrayList<>();
+  static Map<String, Instant> resetLinkExpirations = new HashMap<>();
 
   static final String TEMPLATE =
       """
@@ -75,7 +80,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       if (passwordTom.equals(PASSWORD_TOM_9)) {
         return failed(this).feedback("login_failed").build();
       } else if (passwordTom.equals(password)) {
-        return failed(this).feedback("login_failed").build();
+        return success(this).build();
       }
     }
     return failed(this).feedback("login_failed.tom").build();
@@ -84,7 +89,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
   @GetMapping("/PasswordReset/reset/reset-password/{link}")
   public ModelAndView resetPassword(@PathVariable(value = "link") String link, Model model) {
     ModelAndView modelAndView = new ModelAndView();
-    if (ResetLinkAssignment.resetLinks.contains(link)) {
+    if (isUsableResetLink(link)) {
       PasswordChangeForm form = new PasswordChangeForm();
       form.setResetLink(link);
       model.addAttribute("form", form);
@@ -110,20 +115,52 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       modelAndView.setViewName(VIEW_FORMATTER.formatted("password_reset"));
       return modelAndView;
     }
-    if (!resetLinks.contains(form.getResetLink())) {
+    if (!consumeResetLink(form.getResetLink(), username, form.getPassword())) {
       modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
       return modelAndView;
     }
-    if (checkIfLinkIsFromTom(form.getResetLink(), username)) {
-      usersToTomPassword.put(username, form.getPassword());
-    }
-    resetLinks.remove(form.getResetLink());
-    userToTomResetLink.remove(username, form.getResetLink());
     modelAndView.setViewName(VIEW_FORMATTER.formatted("success"));
     return modelAndView;
   }
 
-  private boolean checkIfLinkIsFromTom(String resetLinkFromForm, String username) {
+  static void registerResetLink(String resetLink) {
+    synchronized (RESET_LINK_LOCK) {
+      resetLinks.add(resetLink);
+      resetLinkExpirations.put(resetLink, Instant.now().plus(RESET_LINK_LIFETIME));
+    }
+  }
+
+  private static boolean isUsableResetLink(String resetLink) {
+    synchronized (RESET_LINK_LOCK) {
+      Instant expiresAt = resetLinkExpirations.get(resetLink);
+      if (expiresAt == null || !expiresAt.isAfter(Instant.now())) {
+        removeResetLink(resetLink);
+        return false;
+      }
+      return resetLinks.contains(resetLink);
+    }
+  }
+
+  private static boolean consumeResetLink(String resetLink, String username, String password) {
+    synchronized (RESET_LINK_LOCK) {
+      if (!isUsableResetLink(resetLink)) {
+        return false;
+      }
+      if (checkIfLinkIsFromTom(resetLink, username)) {
+        usersToTomPassword.put(username, password);
+      }
+      removeResetLink(resetLink);
+      return true;
+    }
+  }
+
+  private static void removeResetLink(String resetLink) {
+    resetLinks.remove(resetLink);
+    resetLinkExpirations.remove(resetLink);
+    userToTomResetLink.entrySet().removeIf(entry -> resetLink.equals(entry.getValue()));
+  }
+
+  private static boolean checkIfLinkIsFromTom(String resetLinkFromForm, String username) {
     String resetLink = userToTomResetLink.getOrDefault(username, "unknown");
     return resetLink.equals(resetLinkFromForm);
   }
