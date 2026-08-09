@@ -4,11 +4,10 @@
  */
 package org.owasp.webgoat.lessons.hijacksession.cas;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.DoublePredicate;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -18,29 +17,38 @@ import org.springframework.web.context.annotation.ApplicationScope;
  * @author Angel Olle Blazquez
  */
 
-// weak id value and mechanism
-
 @ApplicationScope
 @Component
 public class HijackSessionAuthenticationProvider implements AuthenticationProvider<Authentication> {
 
-  private Queue<String> sessions = new LinkedList<>();
-  protected static final int MAX_SESSIONS = 50;
-
-  private static final DoublePredicate PROBABILITY_DOUBLE_PREDICATE = pr -> pr < 0.75;
+  private final Map<String, String> sessions = new ConcurrentHashMap<>();
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
   private static final Supplier<String> GENERATE_SESSION_ID =
-      () -> UUID.randomUUID().toString();
+      () -> {
+        byte[] bytes = new byte[32];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+      };
   public static final Supplier<Authentication> AUTHENTICATION_SUPPLIER =
       () -> Authentication.builder().id(GENERATE_SESSION_ID.get()).build();
 
   @Override
   public Authentication authenticate(Authentication authentication) {
+    return authenticate(authentication, null);
+  }
+
+  /**
+   * A hijack cookie is a bearer credential only within the HTTP session that created it. There is
+   * deliberately no automatic authenticated session creation in this lesson endpoint.
+   */
+  public Authentication authenticate(Authentication authentication, String ownerSessionId) {
     if (authentication == null) {
       return AUTHENTICATION_SUPPLIER.get();
     }
 
     if (StringUtils.isNotEmpty(authentication.getId())
-        && sessions.contains(authentication.getId())) {
+        && ownerSessionId != null
+        && ownerSessionId.equals(sessions.get(authentication.getId()))) {
       authentication.setAuthenticated(true);
       return authentication;
     }
@@ -49,24 +57,11 @@ public class HijackSessionAuthenticationProvider implements AuthenticationProvid
       authentication.setId(GENERATE_SESSION_ID.get());
     }
 
-    authorizedUserAutoLogin();
-
     return authentication;
   }
 
-  protected void authorizedUserAutoLogin() {
-    if (!PROBABILITY_DOUBLE_PREDICATE.test(ThreadLocalRandom.current().nextDouble())) {
-      Authentication authentication = AUTHENTICATION_SUPPLIER.get();
-      authentication.setAuthenticated(true);
-      addSession(authentication.getId());
-    }
-  }
-
-  protected boolean addSession(String sessionId) {
-    if (sessions.size() >= MAX_SESSIONS) {
-      sessions.remove();
-    }
-    return sessions.add(sessionId);
+  protected boolean addSession(String sessionId, String ownerSessionId) {
+    return sessions.putIfAbsent(sessionId, ownerSessionId) == null;
   }
 
   protected int getSessionsSize() {
