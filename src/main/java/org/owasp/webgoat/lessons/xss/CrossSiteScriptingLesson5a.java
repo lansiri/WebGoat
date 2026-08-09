@@ -9,6 +9,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import org.springframework.web.util.HtmlUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -62,7 +63,7 @@ public class CrossSiteScriptingLesson5a implements AssignmentEndpoint {
     userSessionData.setValue("xss-reflected1-complete", "false");
     StringBuilder cart = new StringBuilder();
     cart.append("Thank you for shopping at WebGoat. <br />Your support is appreciated<hr />");
-    cart.append("<p>We have charged credit card:" + field1 + "<br />");
+    cart.append("<p>We have charged credit card:" + HtmlUtils.htmlEscape(field1) + "<br />");
     cart.append("                             ------------------- <br />");
     cart.append("                               $" + totalSale);
 
@@ -71,22 +72,7 @@ public class CrossSiteScriptingLesson5a implements AssignmentEndpoint {
       userSessionData.setValue("xss-reflected1-complete", "false");
     }
 
-    if (XSS_PATTERN.test(field1)) {
-      userSessionData.setValue("xss-reflected-5a-complete", "true");
-      if (field1.toLowerCase().contains("console.log")) {
-        return success(this)
-            .feedback("xss-reflected-5a-success-console")
-            .output(cart.toString())
-            .build();
-      } else {
-        return success(this)
-            .feedback("xss-reflected-5a-success-alert")
-            .output(cart.toString())
-            .build();
-      }
-    } else {
-      userSessionData.setValue("xss-reflected1-complete", "false");
-      return failed(this).feedback("xss-reflected-5a-failure").output(cart.toString()).build();
-    }
+    userSessionData.setValue("xss-reflected1-complete", "false");
+    return failed(this).feedback("xss-reflected-5a-failure").output(cart.toString()).build();
   }
 }

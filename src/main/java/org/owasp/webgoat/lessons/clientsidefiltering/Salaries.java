@@ -70,9 +70,8 @@ public class Salaries {
 
       sb.append("/Employees/Employee/UserID | ");
       sb.append("/Employees/Employee/FirstName | ");
-      sb.append("/Employees/Employee/LastName | ");
-      sb.append("/Employees/Employee/SSN | ");
-      sb.append("/Employees/Employee/Salary ");
+      sb.append("/Employees/Employee/LastName ");
+      // Sensitive attributes (SSN, Salary) are intentionally omitted from the client response.
 
       String expression = sb.toString();
       nodes = (NodeList) path.evaluate(expression, inputSource, XPathConstants.NODESET);
