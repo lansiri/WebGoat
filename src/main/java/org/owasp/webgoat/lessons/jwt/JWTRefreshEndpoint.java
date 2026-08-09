@@ -94,14 +94,9 @@ public class JWTRefreshEndpoint implements AssignmentEndpoint {
       Claims claims = (Claims) jwt.getBody();
       String user = (String) claims.get("user");
       if ("Tom".equals(user)) {
-        if ("none".equals(jwt.getHeader().get("alg"))) {
-          return ok(success(this).feedback("jwt-refresh-alg-none").build());
-        }
         return ok(success(this).build());
       }
       return ok(failed(this).feedback("jwt-refresh-not-tom").feedbackArgs(user).build());
-    } catch (ExpiredJwtException e) {
-      return ok(failed(this).output(e.getMessage()).build());
     } catch (JwtException e) {
       return ok(failed(this).feedback("jwt-invalid-token").build());
     }
