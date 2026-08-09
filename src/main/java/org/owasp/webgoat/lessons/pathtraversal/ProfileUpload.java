@@ -8,7 +8,6 @@ import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import org.owasp.webgoat.container.CurrentUsername;
-import org.apache.commons.io.FilenameUtils;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,7 +40,7 @@ public class ProfileUpload extends ProfileUploadBase {
       @RequestParam("uploadedFile") MultipartFile file,
       @RequestParam(value = "fullName", required = false) String fullName,
       @CurrentUsername String username) {
-    return super.execute(file, FilenameUtils.getName(file.getOriginalFilename()), username);
+    return super.execute(file, fullName, username);
   }
 
   @GetMapping("/PathTraversal/profile-picture")

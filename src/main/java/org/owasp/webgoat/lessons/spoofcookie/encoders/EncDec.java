@@ -5,11 +5,9 @@
 package org.owasp.webgoat.lessons.spoofcookie.encoders;
 
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.SecureRandom;
 import java.util.Base64;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.security.crypto.codec.Hex;
 
 /***
  *
@@ -19,11 +17,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class EncDec {
 
-  private static final byte[] SIGNING_KEY = new byte[32];
+  // PoC: weak encoding method
 
-  static {
-    new SecureRandom().nextBytes(SIGNING_KEY);
-  }
+  private static final String SALT = RandomStringUtils.randomAlphabetic(10);
 
   private EncDec() {}
 
@@ -32,8 +28,10 @@ public class EncDec {
       return null;
     }
 
-    String payload = base64Encode(value.toLowerCase());
-    return payload + "." + base64Encode(sign(payload));
+    String encoded = value.toLowerCase() + SALT;
+    encoded = revert(encoded);
+    encoded = hexEncode(encoded);
+    return base64Encode(encoded);
   }
 
   public static String decode(final String encodedValue) throws IllegalArgumentException {
@@ -41,42 +39,32 @@ public class EncDec {
       return null;
     }
 
-    String[] parts = encodedValue.split("\\.", -1);
-    if (parts.length != 2) {
-      throw new IllegalArgumentException("Invalid cookie signature");
-    }
-    byte[] presented;
-    try {
-      presented = Base64.getUrlDecoder().decode(parts[1]);
-    } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("Invalid cookie signature");
-    }
-    if (!java.security.MessageDigest.isEqual(sign(parts[0]), presented)) {
-      throw new IllegalArgumentException("Invalid cookie signature");
-    }
-    return base64Decode(parts[0]);
+    String decoded = base64Decode(encodedValue);
+    decoded = hexDecode(decoded);
+    decoded = revert(decoded);
+    return decoded.substring(0, decoded.length() - SALT.length());
   }
 
-  private static byte[] sign(String value) {
-    try {
-      Mac mac = Mac.getInstance("HmacSHA256");
-      mac.init(new SecretKeySpec(SIGNING_KEY, "HmacSHA256"));
-      return mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
-    } catch (GeneralSecurityException e) {
-      throw new IllegalStateException("Unable to sign cookie", e);
-    }
+  private static String revert(final String value) {
+    return new StringBuilder(value).reverse().toString();
+  }
+
+  private static String hexEncode(final String value) {
+    char[] encoded = Hex.encode(value.getBytes(StandardCharsets.UTF_8));
+    return new String(encoded);
+  }
+
+  private static String hexDecode(final String value) {
+    byte[] decoded = Hex.decode(value);
+    return new String(decoded);
   }
 
   private static String base64Encode(final String value) {
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(value.getBytes(StandardCharsets.UTF_8));
+    return Base64.getEncoder().encodeToString(value.getBytes());
   }
 
   private static String base64Decode(final String value) {
-    byte[] decoded = Base64.getUrlDecoder().decode(value);
-    return new String(decoded, StandardCharsets.UTF_8);
-  }
-
-  private static String base64Encode(byte[] value) {
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(value);
+    byte[] decoded = Base64.getDecoder().decode(value.getBytes());
+    return new String(decoded);
   }
 }

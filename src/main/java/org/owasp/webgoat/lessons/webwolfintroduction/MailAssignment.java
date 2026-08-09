@@ -46,7 +46,9 @@ public class MailAssignment implements AssignmentEndpoint {
           Email.builder()
               .recipient(username)
               .title("Test messages from WebWolf")
-              .contents("This is a test message from WebWolf.")
+              .contents(
+                  "This is a test message from WebWolf, your unique code is: "
+                      + StringUtils.reverse(username))
               .sender("webgoat@owasp.org")
               .build();
       try {
@@ -69,6 +71,10 @@ public class MailAssignment implements AssignmentEndpoint {
   @PostMapping("/WebWolf/mail")
   @ResponseBody
   public AttackResult completed(@RequestParam String uniqueCode, @CurrentUsername String username) {
-    return failed(this).feedbackArgs("webwolf.code_incorrect").feedbackArgs(uniqueCode).build();
+    if (uniqueCode.equals(StringUtils.reverse(username))) {
+      return success(this).build();
+    } else {
+      return failed(this).feedbackArgs("webwolf.code_incorrect").feedbackArgs(uniqueCode).build();
+    }
   }
 }
