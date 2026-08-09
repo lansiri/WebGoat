@@ -72,9 +72,6 @@ public class CommentsCache {
 
     // TODO fix me disabled for now.
     if (securityEnabled) {
-      xif.setProperty(XMLInputFactory.SUPPORT_DTD, false); // disable DTDs entirely
-      xif.setProperty(
-          "javax.xml.stream.isSupportingExternalEntities", false); // disable external entities
       xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Compliant
       xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // compliant
     }
