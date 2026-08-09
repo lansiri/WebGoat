@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.webgoat.container.CurrentUsername;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.owasp.webgoat.lessons.challenges.Flags;
@@ -40,9 +41,18 @@ public class Assignment8 implements AssignmentEndpoint {
   @GetMapping(value = "/challenge/8/vote/{stars}", produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public ResponseEntity<?> vote(
-      @PathVariable(value = "stars") int nrOfStars, HttpServletRequest request) {
-    var json = Map.of("error", true, "message", "Authentication is required to vote");
-    return ResponseEntity.status(401).body(json);
+      @PathVariable(value = "stars") int nrOfStars,
+      HttpServletRequest request,
+      @CurrentUsername String username) {
+    if (!org.springframework.util.StringUtils.hasText(username)
+        || "anonymous".equals(username)) {
+      return ResponseEntity.status(401)
+          .body(Map.of("error", true, "message", "Authentication is required to vote"));
+    }
+    votes.put(nrOfStars, votes.getOrDefault(nrOfStars, 0) + 1);
+    return ResponseEntity.ok()
+        .header("X-FlagController", "Thanks for voting, your flag is: " + flags.getFlag(8))
+        .build();
   }
 
   @GetMapping("/challenge/8/votes/")
