@@ -8,7 +8,6 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -51,19 +50,16 @@ public class HijackSessionAssignment implements AssignmentEndpoint {
       @RequestParam String username,
       @RequestParam String password,
       @CookieValue(value = COOKIE_NAME, required = false) String cookieValue,
-      HttpServletRequest request,
       HttpServletResponse response) {
 
     Authentication authentication;
     if (StringUtils.isEmpty(cookieValue)) {
       authentication =
           provider.authenticate(
-              Authentication.builder().name(username).credentials(password).build(),
-              request.getSession().getId());
+              Authentication.builder().name(username).credentials(password).build());
       setCookie(response, authentication.getId());
     } else {
-      authentication =
-          provider.authenticate(Authentication.builder().id(cookieValue).build(), request.getSession().getId());
+      authentication = provider.authenticate(Authentication.builder().id(cookieValue).build());
     }
 
     if (authentication.isAuthenticated()) {
