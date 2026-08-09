@@ -12,9 +12,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.owasp.webgoat.container.CurrentUsername;
+import org.owasp.webgoat.container.users.WebGoatUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,9 +33,9 @@ public class MissingFunctionACUsers {
   private final MissingAccessControlUserRepository userRepository;
 
   @GetMapping(path = {"access-control/users"})
-  public ModelAndView listUsers(@CurrentUsername String username) {
+  public ModelAndView listUsers(Authentication authentication) {
 
-    requireAdmin(username);
+    requireAdmin(authentication);
 
     ModelAndView model = new ModelAndView();
     model.setViewName("list_users");
@@ -54,8 +55,8 @@ public class MissingFunctionACUsers {
       path = {"access-control/users"},
       consumes = "application/json")
   @ResponseBody
-  public ResponseEntity<List<DisplayUser>> usersService(@CurrentUsername String username) {
-    requireAdmin(username);
+  public ResponseEntity<List<DisplayUser>> usersService(Authentication authentication) {
+    requireAdmin(authentication);
     return ResponseEntity.ok(
         userRepository.findAllUsers().stream()
             .map(user -> new DisplayUser(user, PASSWORD_SALT_SIMPLE))
@@ -66,15 +67,12 @@ public class MissingFunctionACUsers {
       path = {"access-control/users-admin-fix"},
       consumes = "application/json")
   @ResponseBody
-  public ResponseEntity<List<DisplayUser>> usersFixed(@CurrentUsername String username) {
-    var currentUser = userRepository.findByUsername(username);
-    if (currentUser != null && currentUser.isAdmin()) {
-      return ResponseEntity.ok(
-          userRepository.findAllUsers().stream()
-              .map(user -> new DisplayUser(user, PASSWORD_SALT_ADMIN))
-              .collect(Collectors.toList()));
-    }
-    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+  public ResponseEntity<List<DisplayUser>> usersFixed(Authentication authentication) {
+    requireAdmin(authentication);
+    return ResponseEntity.ok(
+        userRepository.findAllUsers().stream()
+            .map(user -> new DisplayUser(user, PASSWORD_SALT_ADMIN))
+            .collect(Collectors.toList()));
   }
 
   @PostMapping(
@@ -82,8 +80,8 @@ public class MissingFunctionACUsers {
       consumes = "application/json",
       produces = "application/json")
   @ResponseBody
-  public User addUser(@RequestBody User newUser, @CurrentUsername String username) {
-    requireAdmin(username);
+  public User addUser(@RequestBody User newUser, Authentication authentication) {
+    requireAdmin(authentication);
     try {
       userRepository.save(newUser);
       return newUser;
@@ -98,9 +96,10 @@ public class MissingFunctionACUsers {
 
   }
 
-  private void requireAdmin(String username) {
-    User currentUser = userRepository.findByUsername(username);
-    if (currentUser == null || !currentUser.isAdmin()) {
+  private void requireAdmin(Authentication authentication) {
+    if (authentication == null
+        || authentication.getAuthorities().stream()
+            .noneMatch(authority -> WebGoatUser.ROLE_ADMIN.equals(authority.getAuthority()))) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
   }
