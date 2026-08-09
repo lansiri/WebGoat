@@ -37,7 +37,7 @@ public class IDORViewOwnProfile {
         details.put("name", userProfile.getName());
         details.put("color", userProfile.getColor());
         details.put("size", userProfile.getSize());
-        // Internal authorization roles are not profile data and must not be disclosed.
+        details.put("role", userProfile.getRole());
       } else {
         details.put(
             "error",
