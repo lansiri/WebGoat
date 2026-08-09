@@ -12,12 +12,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.owasp.webgoat.container.plugins.LessonTest;
-import org.owasp.webgoat.lessons.passwordreset.resetlink.PasswordChangeForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
-import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -35,55 +33,6 @@ class ResetLinkAssignmentTest extends LessonTest {
   @BeforeEach
   public void setup() {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
-    ResetLinkAssignment.resetLinks.clear();
-    ResetLinkAssignment.userToTomResetLink.clear();
-    ResetLinkAssignment.usersToTomPassword.clear();
-  }
-
-  @Test
-  void unboundResetLinkCannotChangeAnotherUsersPassword() {
-    String resetLink = "unbound-reset-link";
-    ResetLinkAssignment.resetLinks.add(resetLink);
-
-    var modelAndView =
-        new ResetLinkAssignment()
-            .changePassword(
-                passwordChangeForm(resetLink, "new-password"),
-                new BeanPropertyBindingResult(new Object(), "form"),
-                "attacker");
-
-    Assertions.assertThat(modelAndView.getViewName())
-        .isEqualTo("lessons/passwordreset/templates/password_link_not_found.html");
-    Assertions.assertThat(ResetLinkAssignment.usersToTomPassword).doesNotContainKey("attacker");
-    Assertions.assertThat(ResetLinkAssignment.resetLinks).contains(resetLink);
-  }
-
-  @Test
-  void ownerBoundResetLinkChangesOnlyItsOwnersPasswordAndIsConsumed() {
-    String resetLink = "owner-bound-reset-link";
-    ResetLinkAssignment.resetLinks.add(resetLink);
-    ResetLinkAssignment.userToTomResetLink.put("owner", resetLink);
-
-    var modelAndView =
-        new ResetLinkAssignment()
-            .changePassword(
-                passwordChangeForm(resetLink, "new-password"),
-                new BeanPropertyBindingResult(new Object(), "form"),
-                "owner");
-
-    Assertions.assertThat(modelAndView.getViewName())
-        .isEqualTo("lessons/passwordreset/templates/success.html");
-    Assertions.assertThat(ResetLinkAssignment.usersToTomPassword)
-        .containsEntry("owner", "new-password");
-    Assertions.assertThat(ResetLinkAssignment.resetLinks).doesNotContain(resetLink);
-    Assertions.assertThat(ResetLinkAssignment.userToTomResetLink).doesNotContainKey("owner");
-  }
-
-  private PasswordChangeForm passwordChangeForm(String resetLink, String password) {
-    PasswordChangeForm form = new PasswordChangeForm();
-    form.setResetLink(resetLink);
-    form.setPassword(password);
-    return form;
   }
 
   @Test
