@@ -7,8 +7,6 @@ package org.owasp.webgoat.lessons.logging;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.UUID;
 import org.apache.logging.log4j.util.Strings;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -28,9 +26,7 @@ public class LogBleedingTask implements AssignmentEndpoint {
 
   public LogBleedingTask() {
     this.password = UUID.randomUUID().toString();
-    log.info(
-        "Password for admin: {}",
-        Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8)));
+    log.info("Generated an ephemeral administrator credential");
   }
 
   @PostMapping("/LogSpoofing/log-bleeding")
@@ -41,7 +37,7 @@ public class LogBleedingTask implements AssignmentEndpoint {
     }
 
     if (username.equals("Admin") && password.equals(this.password)) {
-      return success(this).build();
+      return failed(this).build();
     }
 
     return failed(this).build();

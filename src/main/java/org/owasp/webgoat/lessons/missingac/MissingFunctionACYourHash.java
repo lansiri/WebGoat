@@ -36,12 +36,6 @@ public class MissingFunctionACYourHash implements AssignmentEndpoint {
       produces = {"application/json"})
   @ResponseBody
   public AttackResult simple(String userHash) {
-    User user = userRepository.findByUsername("Jerry");
-    DisplayUser displayUser = new DisplayUser(user, PASSWORD_SALT_SIMPLE);
-    if (userHash.equals(displayUser.getUserHash())) {
-      return success(this).feedback("access-control.hash.success").build();
-    } else {
-      return failed(this).build();
-    }
+    return failed(this).build();
   }
 }

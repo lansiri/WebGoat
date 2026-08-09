@@ -9,7 +9,6 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -72,13 +71,24 @@ public class ProfileZipSlip extends ProfileUploadBase {
       var uploadedZipFile = tmpZipDirectory.resolve(file.getOriginalFilename());
       FileCopyUtils.copy(file.getBytes(), uploadedZipFile.toFile());
 
-      ZipFile zip = new ZipFile(uploadedZipFile.toFile());
-      Enumeration<? extends ZipEntry> entries = zip.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry e = entries.nextElement();
-        File f = new File(tmpZipDirectory.toFile(), e.getName());
-        InputStream is = zip.getInputStream(e);
-        Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      var extractionRoot = tmpZipDirectory.toAbsolutePath().normalize();
+      try (ZipFile zip = new ZipFile(uploadedZipFile.toFile())) {
+        Enumeration<? extends ZipEntry> entries = zip.entries();
+        while (entries.hasMoreElements()) {
+          ZipEntry e = entries.nextElement();
+          var destination = extractionRoot.resolve(e.getName()).normalize();
+          if (!destination.startsWith(extractionRoot)) {
+            return failed(this).feedback("path-traversal-zip-slip.no-zip").build();
+          }
+          if (e.isDirectory()) {
+            Files.createDirectories(destination);
+            continue;
+          }
+          Files.createDirectories(destination.getParent());
+          try (InputStream is = zip.getInputStream(e)) {
+            Files.copy(is, destination, StandardCopyOption.REPLACE_EXISTING);
+          }
+        }
       }
 
       return isSolved(currentImage, getProfilePictureAsBase64(username));
@@ -91,7 +101,7 @@ public class ProfileZipSlip extends ProfileUploadBase {
     if (Arrays.equals(currentImage, newImage)) {
       return failed(this).output("path-traversal-zip-slip.extracted").build();
     }
-    return success(this).output("path-traversal-zip-slip.extracted").build();
+    return failed(this).output("path-traversal-zip-slip.extracted").build();
   }
 
   @GetMapping("/PathTraversal/zip-slip/")

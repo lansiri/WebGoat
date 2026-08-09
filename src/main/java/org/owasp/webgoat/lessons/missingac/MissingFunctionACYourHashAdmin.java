@@ -42,12 +42,6 @@ public class MissingFunctionACYourHashAdmin implements AssignmentEndpoint {
     // current user should be in the DB
     // if not admin then return 403
 
-    var user = userRepository.findByUsername("Jerry");
-    var displayUser = new DisplayUser(user, PASSWORD_SALT_ADMIN);
-    if (userHash.equals(displayUser.getUserHash())) {
-      return success(this).feedback("access-control.hash.success").build();
-    } else {
-      return failed(this).feedback("access-control.hash.close").build();
-    }
+    return failed(this).feedback("access-control.hash.close").build();
   }
 }
