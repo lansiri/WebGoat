@@ -57,11 +57,11 @@ public class CSRFFeedback implements AssignmentEndpoint {
     boolean correctCSRF =
         requestContainsWebGoatCookie(request.getCookies())
             && request.getContentType().contains(MediaType.TEXT_PLAIN_VALUE);
-    correctCSRF &= refererMatchesHost(request);
+    correctCSRF &= hostOrRefererDifferentHost(request);
     if (correctCSRF) {
       String flag = UUID.randomUUID().toString();
       userSessionData.setValue("csrf-feedback", flag);
-      return failed(this).build();
+      return success(this).feedback("csrf-feedback-success").feedbackArgs(flag).build();
     }
     return failed(this).build();
   }
@@ -70,19 +70,20 @@ public class CSRFFeedback implements AssignmentEndpoint {
   @ResponseBody
   public AttackResult flag(@RequestParam("confirmFlagVal") String flag) {
     if (flag.equals(userSessionData.getValue("csrf-feedback"))) {
-      return failed(this).build();
+      return success(this).build();
     } else {
       return failed(this).build();
     }
   }
 
-  private boolean refererMatchesHost(HttpServletRequest request) {
+  private boolean hostOrRefererDifferentHost(HttpServletRequest request) {
     String referer = request.getHeader("Referer");
     String host = request.getHeader("Host");
-    return referer != null
-        && host != null
-        && (referer.startsWith("https://" + host + "/")
-            || referer.startsWith("http://" + host + "/"));
+    if (referer != null) {
+      return !referer.contains(host);
+    } else {
+      return true;
+    }
   }
 
   private boolean requestContainsWebGoatCookie(Cookie[] cookies) {
