@@ -69,10 +69,11 @@ public class JWTHeaderKIDEndpoint implements AssignmentEndpoint {
                       public byte[] resolveSigningKeyBytes(JwsHeader header, Claims claims) {
                         final String kid = (String) header.get("kid");
                         try (var connection = dataSource.getConnection()) {
-                          var statement =
-                              connection.prepareStatement("SELECT key FROM jwt_keys WHERE id = ?");
-                          statement.setString(1, kid);
-                          ResultSet rs = statement.executeQuery();
+                          ResultSet rs =
+                              connection
+                                  .createStatement()
+                                  .executeQuery(
+                                      "SELECT key FROM jwt_keys WHERE id = '" + kid + "'");
                           while (rs.next()) {
                             return TextCodec.BASE64.decode(rs.getString(1));
                           }
@@ -92,7 +93,7 @@ public class JWTHeaderKIDEndpoint implements AssignmentEndpoint {
           return failed(this).feedback("jwt-final-jerry-account").build();
         }
         if ("Tom".equals(username)) {
-          return failed(this).feedback("jwt-invalid-token").build();
+          return success(this).build();
         } else {
           return failed(this).feedback("jwt-final-not-tom").build();
         }
