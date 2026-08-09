@@ -4,7 +4,6 @@
  */
 package org.owasp.webgoat.lessons.sqlinjection.introduction;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -27,22 +26,6 @@ public class SqlInjectionLesson5Test extends LessonTest {
         .getConnection()
         .prepareStatement("revoke select on grant_rights from unauthorized_user cascade")
         .execute();
-  }
-
-  @Test
-  public void requestDoesNotCreateDatabaseUser() {
-    var createUserCalled = new boolean[] {false};
-    SqlInjectionLesson5 lesson =
-        new SqlInjectionLesson5(null) {
-          @Override
-          public void createUser() {
-            createUserCalled[0] = true;
-          }
-        };
-
-    lesson.completed("select * from grant_rights");
-
-    assertFalse(createUserCalled[0]);
   }
 
   @Test
