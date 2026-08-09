@@ -41,8 +41,12 @@ public class Assignment8 implements AssignmentEndpoint {
   @ResponseBody
   public ResponseEntity<?> vote(
       @PathVariable(value = "stars") int nrOfStars, HttpServletRequest request) {
-    var json = Map.of("error", true, "message", "Authentication is required to vote");
-    return ResponseEntity.status(401).body(json);
+    if (request.getUserPrincipal() == null) {
+      var json = Map.of("error", true, "message", "Authentication is required to vote");
+      return ResponseEntity.status(401).body(json);
+    }
+    votes.computeIfPresent(nrOfStars, (stars, count) -> count + 1);
+    return ResponseEntity.accepted().build();
   }
 
   @GetMapping("/challenge/8/votes/")
