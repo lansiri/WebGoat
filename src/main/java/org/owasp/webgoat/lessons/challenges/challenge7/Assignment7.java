@@ -37,8 +37,6 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 implements AssignmentEndpoint {
 
-  public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
-
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
           + " href='%s:8080/WebGoat/challenge/7/reset-password/%s'>link</a> to reset your"
@@ -63,16 +61,7 @@ public class Assignment7 implements AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
-    if (link.equals(ADMIN_PASSWORD_LINK)) {
-      return ResponseEntity.accepted()
-          .body(
-              "<h1>Success!!</h1>"
-                  + "<img src='/WebGoat/images/hi-five-cat.jpg'>"
-                  + "<br/><br/>Here is your flag: "
-                  + flags.getFlag(7));
-    }
-    return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT)
-        .body("That is not the reset link for admin");
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Password reset link not found");
   }
 
   @PostMapping("/challenge/7")
@@ -104,6 +93,6 @@ public class Assignment7 implements AssignmentEndpoint {
   @GetMapping(value = "/challenge/7/.git", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
   @ResponseBody
   public ClassPathResource git() {
-    return new ClassPathResource("lessons/challenges/challenge7/git.zip");
+    throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND);
   }
 }
