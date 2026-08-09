@@ -7,6 +7,7 @@ package org.owasp.webgoat.lessons.jwt;
 import static io.jsonwebtoken.SignatureAlgorithm.HS512;
 import static org.hamcrest.Matchers.is;
 import static org.owasp.webgoat.lessons.jwt.JWTSecretKeyEndpoint.JWT_SECRET;
+import static org.owasp.webgoat.lessons.jwt.JWTSecretKeyEndpoint.SECRETS;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -107,6 +108,21 @@ public class JWTSecretKeyEndpointTest extends LessonTest {
         .andExpect(status().isOk())
         .andExpect(
             jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
+  }
+
+  @Test
+  public void dictionarySecretsCannotForgeWebGoatToken() throws Exception {
+    Claims claims = createClaims("WebGoat");
+
+    for (String dictionarySecret : SECRETS) {
+      String token = Jwts.builder().setClaims(claims).signWith(HS512, dictionarySecret).compact();
+
+      mockMvc
+          .perform(MockMvcRequestBuilders.post("/JWT/secret").param("token", token))
+          .andExpect(status().isOk())
+          .andExpect(
+              jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("jwt-invalid-token"))));
+    }
   }
 
   @Test
