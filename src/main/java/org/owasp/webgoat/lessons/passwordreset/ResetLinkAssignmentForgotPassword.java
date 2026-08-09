@@ -60,6 +60,7 @@ public class ResetLinkAssignmentForgotPassword implements AssignmentEndpoint {
     String resetLink = UUID.randomUUID().toString();
     ResetLinkAssignment.resetLinks.add(resetLink);
     ResetLinkAssignment.resetLinkOwners.put(resetLink, username);
+    ResetLinkAssignment.userToTomResetLink.put(username, resetLink);
     try {
       sendMailToUser(email, webGoatUrl, resetLink);
     } catch (Exception e) {

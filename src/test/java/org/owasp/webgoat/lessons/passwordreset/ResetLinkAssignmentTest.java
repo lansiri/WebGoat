@@ -36,6 +36,7 @@ class ResetLinkAssignmentTest extends LessonTest {
   public void setup() {
     ResetLinkAssignment.resetLinks.clear();
     ResetLinkAssignment.resetLinkOwners.clear();
+    ResetLinkAssignment.userToTomResetLink.clear();
     ResetLinkAssignment.usersToTomPassword.clear();
     this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
   }
@@ -48,6 +49,7 @@ class ResetLinkAssignmentTest extends LessonTest {
     form.setPassword("secret1");
     ResetLinkAssignment.resetLinks.add("owner-link");
     ResetLinkAssignment.resetLinkOwners.put("owner-link", "owner");
+    ResetLinkAssignment.userToTomResetLink.put("owner", "owner-link");
 
     assignment.changePassword(form, new BeanPropertyBindingResult(form, "form"), "foreign");
     Assertions.assertThat(ResetLinkAssignment.resetLinks).contains("owner-link");
