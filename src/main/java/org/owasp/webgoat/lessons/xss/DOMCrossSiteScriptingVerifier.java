@@ -38,7 +38,13 @@ public class DOMCrossSiteScriptingVerifier implements AssignmentEndpoint {
   @PostMapping("/CrossSiteScripting/dom-follow-up")
   @ResponseBody
   public AttackResult completed(@RequestParam String successMessage) {
-    return failed(this).feedback("xss-dom-message-failure").build();
+    String answer = (String) lessonSession.getValue("randValue");
+
+    if (successMessage.equals(answer)) {
+      return success(this).feedback("xss-dom-message-success").build();
+    } else {
+      return failed(this).feedback("xss-dom-message-failure").build();
+    }
   }
 }
 // something like ...
