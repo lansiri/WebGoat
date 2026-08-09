@@ -5,7 +5,6 @@
 package org.owasp.webgoat.lessons.xss;
 
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -21,10 +20,6 @@ public class CrossSiteScriptingLesson1 implements AssignmentEndpoint {
   @ResponseBody
   public AttackResult completed(
       @RequestParam(value = "checkboxAttack1", required = false) String checkboxValue) {
-    if (checkboxValue != null) {
-      return success(this).build();
-    } else {
-      return failed(this).feedback("xss.lesson1.failure").build();
-    }
+    return failed(this).feedback("xss.lesson1.failure").build();
   }
 }

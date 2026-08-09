@@ -5,7 +5,6 @@
 package org.owasp.webgoat.lessons.httpbasics;
 
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -22,13 +21,6 @@ public class HttpBasicsLesson implements AssignmentEndpoint {
   @PostMapping("/HttpBasics/attack1")
   @ResponseBody
   public AttackResult completed(@RequestParam String person) {
-    if (!person.isBlank()) {
-      return success(this)
-          .feedback("http-basics.reversed")
-          .feedbackArgs(new StringBuilder(person).reverse().toString())
-          .build();
-    } else {
-      return failed(this).feedback("http-basics.empty").build();
-    }
+    return failed(this).feedback("http-basics.empty").build();
   }
 }

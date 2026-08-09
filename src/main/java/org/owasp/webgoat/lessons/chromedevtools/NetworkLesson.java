@@ -5,7 +5,6 @@
 package org.owasp.webgoat.lessons.chromedevtools;
 
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -32,11 +31,7 @@ public class NetworkLesson implements AssignmentEndpoint {
       params = {"network_num", "number"})
   @ResponseBody
   public AttackResult completed(@RequestParam String network_num, @RequestParam String number) {
-    if (network_num.equals(number)) {
-      return success(this).feedback("network.success").output("").build();
-    } else {
-      return failed(this).feedback("network.failed").build();
-    }
+    return failed(this).feedback("network.failed").build();
   }
 
   @PostMapping(path = "/ChromeDevTools/network", params = "networkNum")

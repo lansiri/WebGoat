@@ -5,7 +5,6 @@
 package org.owasp.webgoat.lessons.jwt;
 
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
-import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -20,10 +19,6 @@ public class JWTDecodeEndpoint implements AssignmentEndpoint {
   @PostMapping("/JWT/decode")
   @ResponseBody
   public AttackResult decode(@RequestParam("jwt-encode-user") String user) {
-    if ("user".equals(user)) {
-      return success(this).build();
-    } else {
-      return failed(this).build();
-    }
+    return failed(this).build();
   }
 }
