@@ -7,6 +7,7 @@ package org.owasp.webgoat.webwolf.mailbox;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -115,5 +116,14 @@ public class MailboxControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("mailbox"))
         .andExpect(content().string(not(containsString("Click this mail"))));
+  }
+
+  @Test
+  @WithMockUser(username = "test1234")
+  public void deletingMailOnlyDeletesAuthenticatedUsersMailbox() throws Exception {
+    this.mvc.perform(delete("/mail")).andExpect(status().isAccepted());
+
+    Mockito.verify(mailbox).deleteByRecipient("test1234");
+    Mockito.verify(mailbox, Mockito.never()).deleteAll();
   }
 }
