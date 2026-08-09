@@ -193,7 +193,6 @@ public class JWTVotesEndpoint implements AssignmentEndpoint {
         if (!isAdmin) {
           return failed(this).feedback("jwt-only-admin").build();
         } else {
-          votes.values().forEach(vote -> vote.reset());
           return failed(this).feedback("jwt-invalid-token").build();
         }
       } catch (JwtException e) {
