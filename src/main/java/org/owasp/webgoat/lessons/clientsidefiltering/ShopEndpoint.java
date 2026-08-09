@@ -52,7 +52,7 @@ public class ShopEndpoint {
 
   @GetMapping(value = "/coupons/{code}", produces = MediaType.APPLICATION_JSON_VALUE)
   public CheckoutCode getDiscountCode(@PathVariable String code) {
-    return new CheckoutCode("no", 0);
+    return checkoutCodes.get(code).orElse(new CheckoutCode("no", 0));
   }
 
   @GetMapping(value = "/coupons", produces = MediaType.APPLICATION_JSON_VALUE)
