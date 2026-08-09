@@ -57,8 +57,6 @@ public class ShopEndpoint {
 
   @GetMapping(value = "/coupons", produces = MediaType.APPLICATION_JSON_VALUE)
   public CheckoutCodes all() {
-    // The privileged "super" coupon is never published to the client; the ordinary
-    // promotional codes remain available so the shop keeps working.
-    return new CheckoutCodes(List.copyOf(this.checkoutCodes.getCodes()));
+    return new CheckoutCodes(List.of());
   }
 }
