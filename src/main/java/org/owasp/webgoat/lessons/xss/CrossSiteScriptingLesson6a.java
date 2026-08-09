@@ -35,11 +35,6 @@ public class CrossSiteScriptingLesson6a implements AssignmentEndpoint {
   @ResponseBody
   public AttackResult completed(@RequestParam String DOMTestRoute) {
 
-    if (DOMTestRoute.matches("start\\.mvc#test(\\/|)")) {
-      // return )
-      return success(this).feedback("xss-reflected-6a-success").build();
-    } else {
-      return failed(this).feedback("xss-reflected-6a-failure").build();
-    }
+    return failed(this).feedback("xss-reflected-6a-failure").build();
   }
 }
