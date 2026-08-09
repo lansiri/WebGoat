@@ -25,6 +25,8 @@ public class VulnerableComponentsLesson implements AssignmentEndpoint {
   public @ResponseBody AttackResult completed(@RequestParam String payload) {
     XStream xstream = new XStream();
     xstream.setClassLoader(Contact.class.getClassLoader());
+    XStream.setupDefaultSecurity(xstream);
+    xstream.allowTypes(new Class<?>[] {ContactImpl.class});
     xstream.alias("contact", ContactImpl.class);
     xstream.ignoreUnknownElements();
     Contact contact = null;
@@ -50,10 +52,10 @@ public class VulnerableComponentsLesson implements AssignmentEndpoint {
         // https://x-stream.github.io/CVE-2013-7285.html
       }
       if (!(contact instanceof ContactImpl)) {
-        return success(this).feedback("vulnerable-components.success").build();
+        return failed(this).feedback("vulnerable-components.close").build();
       }
     } catch (Exception e) {
-      return success(this).feedback("vulnerable-components.success").output(e.getMessage()).build();
+      return failed(this).feedback("vulnerable-components.close").build();
     }
     return failed(this).feedback("vulnerable-components.fromXML").feedbackArgs(contact).build();
   }

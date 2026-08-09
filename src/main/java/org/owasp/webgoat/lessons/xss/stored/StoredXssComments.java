@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.HtmlUtils;
 
 @RestController
 public class StoredXssComments implements AssignmentEndpoint {
@@ -80,14 +81,11 @@ public class StoredXssComments implements AssignmentEndpoint {
     comment.setDateTime(LocalDateTime.now().format(fmt));
     comment.setUser(username);
 
+    comment.setText(HtmlUtils.htmlEscape(comment.getText()));
     comments.add(comment);
     userComments.put(username, comments);
 
-    if (comment.getText().contains(phoneHomeString)) {
-      return (success(this).feedback("xss-stored-comment-success").build());
-    } else {
-      return (failed(this).feedback("xss-stored-comment-failure").build());
-    }
+    return failed(this).feedback("xss-stored-comment-failure").build();
   }
 
   private Comment parseJson(String comment) {
