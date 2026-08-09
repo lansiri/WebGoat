@@ -8,10 +8,10 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 import static org.springframework.util.StringUtils.hasText;
 
+import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import org.owasp.webgoat.container.CurrentUsername;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -48,15 +48,14 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
   static final String PASSWORD_TOM_9 =
       "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
+  static Map<String, String> userToTomResetLink = new HashMap<>();
+  static Map<String, String> usersToTomPassword = Maps.newHashMap();
   static List<String> resetLinks = new ArrayList<>();
-  static Map<String, ResetTarget> resetLinkTargets = new HashMap<>();
-  static Map<ResetTarget, String> accountPasswords = new HashMap<>();
-  private static final Object RESET_LINK_LOCK = new Object();
 
   static final String TEMPLATE =
       """
       Hi, you requested a password reset link, please use this <a target='_blank'
-       href='%s/PasswordReset/reset/reset-password/%s'>link</a> to reset your
+       href='http://%s/WebGoat/PasswordReset/reset/reset-password/%s'>link</a> to reset your
        password.
 
       If you did not request this password change you can ignore this message.
@@ -67,25 +66,25 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       Team WebGoat
       """;
 
-  record ResetTarget(String owner, String email) {}
-
   @PostMapping("/PasswordReset/reset/login")
   @ResponseBody
   public AttackResult login(
       @RequestParam String password, @RequestParam String email, @CurrentUsername String username) {
-    if (passwordMatches(username, email, password)) {
-      return success(this).build();
+    if (TOM_EMAIL.equals(email)) {
+      String passwordTom = usersToTomPassword.getOrDefault(username, PASSWORD_TOM_9);
+      if (passwordTom.equals(PASSWORD_TOM_9)) {
+        return failed(this).feedback("login_failed").build();
+      } else if (passwordTom.equals(password)) {
+        return failed(this).feedback("login_failed").build();
+      }
     }
-    return failed(this).feedback("login_failed").build();
+    return failed(this).feedback("login_failed.tom").build();
   }
 
   @GetMapping("/PasswordReset/reset/reset-password/{link}")
-  public ModelAndView resetPassword(
-      @PathVariable(value = "link") String link,
-      Model model,
-      @CurrentUsername String username) {
+  public ModelAndView resetPassword(@PathVariable(value = "link") String link, Model model) {
     ModelAndView modelAndView = new ModelAndView();
-    if (isOwnedResetLink(link, username)) {
+    if (ResetLinkAssignment.resetLinks.contains(link)) {
       PasswordChangeForm form = new PasswordChangeForm();
       form.setResetLink(link);
       model.addAttribute("form", form);
@@ -111,67 +110,21 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       modelAndView.setViewName(VIEW_FORMATTER.formatted("password_reset"));
       return modelAndView;
     }
-    if (!consumeResetLink(form.getResetLink(), username, form.getPassword())) {
+    if (!resetLinks.contains(form.getResetLink())) {
       modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
       return modelAndView;
     }
+    if (checkIfLinkIsFromTom(form.getResetLink(), username)) {
+      usersToTomPassword.put(username, form.getPassword());
+    }
+    resetLinks.remove(form.getResetLink());
+    userToTomResetLink.remove(username, form.getResetLink());
     modelAndView.setViewName(VIEW_FORMATTER.formatted("success"));
     return modelAndView;
   }
 
-  static void registerResetLink(String resetLink, String owner, String email) {
-    synchronized (RESET_LINK_LOCK) {
-      resetLinks.add(resetLink);
-      resetLinkTargets.put(resetLink, new ResetTarget(owner, normalizeEmail(email)));
-    }
-  }
-
-  static void removeResetLink(String resetLink) {
-    synchronized (RESET_LINK_LOCK) {
-      resetLinks.remove(resetLink);
-      resetLinkTargets.remove(resetLink);
-    }
-  }
-
-  static void clearResetState() {
-    synchronized (RESET_LINK_LOCK) {
-      resetLinks.clear();
-      resetLinkTargets.clear();
-      accountPasswords.clear();
-    }
-  }
-
-  private static boolean isOwnedResetLink(String resetLink, String username) {
-    synchronized (RESET_LINK_LOCK) {
-      ResetTarget target = resetLinkTargets.get(resetLink);
-      return target != null && target.owner().equals(username) && resetLinks.contains(resetLink);
-    }
-  }
-
-  private static boolean consumeResetLink(String resetLink, String username, String password) {
-    if (!hasText(resetLink)) {
-      return false;
-    }
-    synchronized (RESET_LINK_LOCK) {
-      ResetTarget target = resetLinkTargets.get(resetLink);
-      if (target == null || !target.owner().equals(username) || !resetLinks.remove(resetLink)) {
-        return false;
-      }
-      accountPasswords.put(target, password);
-      resetLinkTargets.remove(resetLink);
-      return true;
-    }
-  }
-
-  private static boolean passwordMatches(String owner, String email, String password) {
-    synchronized (RESET_LINK_LOCK) {
-      String accountPassword =
-          accountPasswords.get(new ResetTarget(owner, normalizeEmail(email)));
-      return accountPassword != null && accountPassword.equals(password);
-    }
-  }
-
-  private static String normalizeEmail(String email) {
-    return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+  private boolean checkIfLinkIsFromTom(String resetLinkFromForm, String username) {
+    String resetLink = userToTomResetLink.getOrDefault(username, "unknown");
+    return resetLink.equals(resetLinkFromForm);
   }
 }
