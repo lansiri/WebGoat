@@ -55,7 +55,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
   static final String TEMPLATE =
       """
       Hi, you requested a password reset link, please use this <a target='_blank'
-       href='%s/PasswordReset/reset/reset-password/%s'>link</a> to reset your
+       href='http://%s/WebGoat/PasswordReset/reset/reset-password/%s'>link</a> to reset your
        password.
 
       If you did not request this password change you can ignore this message.
@@ -75,7 +75,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       if (passwordTom.equals(PASSWORD_TOM_9)) {
         return failed(this).feedback("login_failed").build();
       } else if (passwordTom.equals(password)) {
-        return success(this).build();
+        return failed(this).feedback("login_failed").build();
       }
     }
     return failed(this).feedback("login_failed.tom").build();
@@ -114,11 +114,9 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
       modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
       return modelAndView;
     }
-    if (!checkIfLinkIsFromTom(form.getResetLink(), username)) {
-      modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
-      return modelAndView;
+    if (checkIfLinkIsFromTom(form.getResetLink(), username)) {
+      usersToTomPassword.put(username, form.getPassword());
     }
-    usersToTomPassword.put(username, form.getPassword());
     resetLinks.remove(form.getResetLink());
     userToTomResetLink.remove(username, form.getResetLink());
     modelAndView.setViewName(VIEW_FORMATTER.formatted("success"));
