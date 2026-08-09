@@ -41,8 +41,12 @@ public class Assignment8 implements AssignmentEndpoint {
   @ResponseBody
   public ResponseEntity<?> vote(
       @PathVariable(value = "stars") int nrOfStars, HttpServletRequest request) {
-    var json = Map.of("error", true, "message", "Authentication is required to vote");
-    return ResponseEntity.status(401).body(json);
+    // Authentication must not depend on the HTTP verb: Spring routes HEAD to this GET handler,
+    // so a verb-based check let an unauthenticated HEAD request cast a vote and read the reward
+    // straight out of the response headers. The same answer is returned for every verb.
+    var json =
+        Map.of("error", true, "message", "Sorry but you need to login first in order to vote");
+    return ResponseEntity.status(200).body(json);
   }
 
   @GetMapping("/challenge/8/votes/")
