@@ -119,7 +119,7 @@ public class ResetLinkAssignment implements AssignmentEndpoint {
     }
     resetLinks.remove(form.getResetLink());
     userToTomResetLink.remove(username, form.getResetLink());
-    modelAndView.setViewName(VIEW_FORMATTER.formatted("success"));
+    modelAndView.setViewName(VIEW_FORMATTER.formatted("password_link_not_found"));
     return modelAndView;
   }
 
