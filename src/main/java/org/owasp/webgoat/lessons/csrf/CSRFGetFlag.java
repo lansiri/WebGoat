@@ -33,7 +33,8 @@ public class CSRFGetFlag {
     String host = req.getHeader("host");
     String origin = req.getHeader("origin");
 
-    if (host != null && ("http://" + host).equals(origin)) {
+    if (host != null
+        && (("http://" + host).equals(origin) || ("https://" + host).equals(origin))) {
       userSessionData.setValue("csrf-get-success", new SecureRandom().nextInt());
       response.put("success", true);
       response.put("message", "Request origin validated");

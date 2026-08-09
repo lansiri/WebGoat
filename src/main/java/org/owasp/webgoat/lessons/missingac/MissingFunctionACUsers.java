@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 /** Created by jason on 1/5/17. */
@@ -32,9 +31,7 @@ public class MissingFunctionACUsers {
   private final MissingAccessControlUserRepository userRepository;
 
   @GetMapping(path = {"access-control/users"})
-  public ModelAndView listUsers(@CurrentUsername String username) {
-
-    requireAdmin(username);
+  public ModelAndView listUsers() {
 
     ModelAndView model = new ModelAndView();
     model.setViewName("list_users");
@@ -54,8 +51,7 @@ public class MissingFunctionACUsers {
       path = {"access-control/users"},
       consumes = "application/json")
   @ResponseBody
-  public ResponseEntity<List<DisplayUser>> usersService(@CurrentUsername String username) {
-    requireAdmin(username);
+  public ResponseEntity<List<DisplayUser>> usersService() {
     return ResponseEntity.ok(
         userRepository.findAllUsers().stream()
             .map(user -> new DisplayUser(user, PASSWORD_SALT_SIMPLE))
@@ -82,8 +78,7 @@ public class MissingFunctionACUsers {
       consumes = "application/json",
       produces = "application/json")
   @ResponseBody
-  public User addUser(@RequestBody User newUser, @CurrentUsername String username) {
-    requireAdmin(username);
+  public User addUser(@RequestBody User newUser) {
     try {
       userRepository.save(newUser);
       return newUser;
@@ -96,12 +91,5 @@ public class MissingFunctionACUsers {
     // "application/json", produces = "application/json")
     // TODO implement delete method with id param and authorization
 
-  }
-
-  private void requireAdmin(String username) {
-    User currentUser = userRepository.findByUsername(username);
-    if (currentUser == null || !currentUser.isAdmin()) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-    }
   }
 }

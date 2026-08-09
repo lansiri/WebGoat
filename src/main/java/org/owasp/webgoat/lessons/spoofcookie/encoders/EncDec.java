@@ -42,7 +42,16 @@ public class EncDec {
     }
 
     String[] parts = encodedValue.split("\\.", -1);
-    if (parts.length != 2 || !constantTimeEquals(sign(parts[0]), base64Decode(parts[1]))) {
+    if (parts.length != 2) {
+      throw new IllegalArgumentException("Invalid cookie signature");
+    }
+    byte[] presented;
+    try {
+      presented = Base64.getUrlDecoder().decode(parts[1]);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid cookie signature");
+    }
+    if (!java.security.MessageDigest.isEqual(sign(parts[0]), presented)) {
       throw new IllegalArgumentException("Invalid cookie signature");
     }
     return base64Decode(parts[0]);
@@ -69,9 +78,5 @@ public class EncDec {
 
   private static String base64Encode(byte[] value) {
     return Base64.getUrlEncoder().withoutPadding().encodeToString(value);
-  }
-
-  private static boolean constantTimeEquals(byte[] expected, String actual) {
-    return java.security.MessageDigest.isEqual(expected, Base64.getUrlDecoder().decode(actual));
   }
 }
