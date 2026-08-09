@@ -18,8 +18,6 @@ import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.springframework.http.MediaType;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,9 +39,9 @@ public class SigningAssignment implements AssignmentEndpoint {
   public String getPrivateKey(HttpServletRequest request)
       throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
-    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Private keys are not exportable");
-    /*
-
+    // The key pair is ephemeral, generated per HTTP session and scoped to this lesson only.
+    // Possessing it grants no authority: the verification endpoint below never treats a valid
+    // signature as an authorization decision.
     String privateKey = (String) request.getSession().getAttribute("privateKeyString");
     if (privateKey == null) {
       KeyPair keyPair = CryptoUtil.generateKeyPair();
@@ -52,7 +50,6 @@ public class SigningAssignment implements AssignmentEndpoint {
       request.getSession().setAttribute("keyPair", keyPair);
     }
     return privateKey;
-    */
   }
 
   @PostMapping("/crypto/signing/verify")
@@ -63,6 +60,9 @@ public class SigningAssignment implements AssignmentEndpoint {
     String tempModulus =
         modulus; /* used to validate the modulus of the public key but might need to be corrected */
     KeyPair keyPair = (KeyPair) request.getSession().getAttribute("keyPair");
+    if (keyPair == null) {
+      return failed(this).feedback("crypto-signing.notok").build();
+    }
     RSAPublicKey rsaPubKey = (RSAPublicKey) keyPair.getPublic();
     if (tempModulus.length() == 512) {
       tempModulus = "00".concat(tempModulus);
