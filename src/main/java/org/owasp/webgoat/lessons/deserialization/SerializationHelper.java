@@ -4,11 +4,9 @@
  */
 package org.owasp.webgoat.lessons.deserialization;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Base64;
@@ -18,11 +16,7 @@ public class SerializationHelper {
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
-    byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    throw new IOException("Native Java deserialization is disabled");
   }
 
   public static String toString(Serializable o) throws IOException {
