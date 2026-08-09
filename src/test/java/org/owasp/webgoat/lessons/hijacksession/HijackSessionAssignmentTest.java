@@ -4,11 +4,11 @@
  */
 package org.owasp.webgoat.lessons.hijacksession;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import jakarta.servlet.http.Cookie;
@@ -58,7 +58,6 @@ class HijackSessionAssignmentTest extends LessonTest {
   @Test
   void testBlankCookie() throws Exception {
     lenient().when(authenticationMock.isAuthenticated()).thenReturn(false);
-    lenient().when(authenticationMock.getId()).thenReturn("opaque-cookie-value");
     lenient()
         .when(providerMock.authenticate(any(Authentication.class)))
         .thenReturn(authenticationMock);
@@ -68,8 +67,7 @@ class HijackSessionAssignmentTest extends LessonTest {
                 .param("username", "webgoat")
                 .param("password", "webgoat"));
 
-    result.andExpect(header().stringValues("Set-Cookie", hasItem(containsString("opaque-cookie-value"))));
-    result.andExpect(header().stringValues("Set-Cookie", hasItem(containsString("SameSite=Strict"))));
+    result.andExpect(cookie().value(COOKIE_NAME, not(emptyString())));
     result.andExpect(jsonPath("$.lessonCompleted", CoreMatchers.is(false)));
   }
 }

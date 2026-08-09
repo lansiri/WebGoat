@@ -7,6 +7,7 @@ package org.owasp.webgoat.lessons.hijacksession;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -19,8 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 
 /***
  *
@@ -71,13 +70,10 @@ public class HijackSessionAssignment implements AssignmentEndpoint {
   }
 
   private void setCookie(HttpServletResponse response, String cookieValue) {
-    ResponseCookie cookie =
-        ResponseCookie.from(COOKIE_NAME, cookieValue)
-            .path("/WebGoat")
-            .secure(true)
-            .httpOnly(true)
-            .sameSite("Strict")
-            .build();
-    response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    Cookie cookie = new Cookie(COOKIE_NAME, cookieValue);
+    cookie.setPath("/WebGoat");
+    cookie.setSecure(true);
+    cookie.setHttpOnly(true);
+    response.addCookie(cookie);
   }
 }
