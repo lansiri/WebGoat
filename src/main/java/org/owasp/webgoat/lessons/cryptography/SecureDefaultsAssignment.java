@@ -29,6 +29,16 @@ public class SecureDefaultsAssignment implements AssignmentEndpoint {
   public AttackResult completed(
       @RequestParam String secretFileName, @RequestParam String secretText)
       throws NoSuchAlgorithmException {
+    if (secretFileName != null && secretFileName.equals("default_secret")) {
+      if (secretText != null
+          && HashingAssignment.getHash(secretText, "SHA-256")
+              .equalsIgnoreCase(
+                  "34de66e5caf2cb69ff2bebdc1f3091ecf6296852446c718e38ebfa60e4aa75d2")) {
+        return success(this).feedback("crypto-secure-defaults.success").build();
+      } else {
+        return failed(this).feedback("crypto-secure-defaults.messagenotok").build();
+      }
+    }
     return failed(this).feedback("crypto-secure-defaults.notok").build();
   }
 }
