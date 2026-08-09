@@ -64,7 +64,7 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
 
             if (results.getRow() > 1) {
               // more than one record, the user succeeded
-              return failed(this)
+              return success(this)
                   .feedback("sql-injection.8.success")
                   .output(output.toString())
                   .build();

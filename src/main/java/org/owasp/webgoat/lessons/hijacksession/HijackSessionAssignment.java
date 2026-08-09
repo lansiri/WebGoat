@@ -63,7 +63,7 @@ public class HijackSessionAssignment implements AssignmentEndpoint {
     }
 
     if (authentication.isAuthenticated()) {
-      return failed(this).build();
+      return success(this).build();
     }
 
     return failed(this).build();

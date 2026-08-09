@@ -72,7 +72,7 @@ public class SqlInjectionLesson10 implements AssignmentEndpoint {
                 .output(output.toString())
                 .build();
           } else {
-            return failed(this).feedback("sql-injection.10.no.results").build();
+            return success(this).feedback("sql-injection.10.success").build();
           }
         }
       } catch (SQLException e) {
@@ -85,7 +85,7 @@ public class SqlInjectionLesson10 implements AssignmentEndpoint {
                       + output.toString())
               .build();
         } else {
-          return failed(this).feedback("sql-injection.10.no.results").build();
+          return success(this).feedback("sql-injection.10.success").build();
         }
       }
 
