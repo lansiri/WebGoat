@@ -52,17 +52,13 @@ public class ShopEndpoint {
 
   @GetMapping(value = "/coupons/{code}", produces = MediaType.APPLICATION_JSON_VALUE)
   public CheckoutCode getDiscountCode(@PathVariable String code) {
-    if (ClientSideFilteringFreeAssignment.SUPER_COUPON_CODE.equals(code)) {
-      return new CheckoutCode(ClientSideFilteringFreeAssignment.SUPER_COUPON_CODE, 100);
-    }
     return checkoutCodes.get(code).orElse(new CheckoutCode("no", 0));
   }
 
   @GetMapping(value = "/coupons", produces = MediaType.APPLICATION_JSON_VALUE)
   public CheckoutCodes all() {
-    List<CheckoutCode> all = Lists.newArrayList();
-    all.addAll(this.checkoutCodes.getCodes());
-    all.add(new CheckoutCode(ClientSideFilteringFreeAssignment.SUPER_COUPON_CODE, 100));
-    return new CheckoutCodes(all);
+    // The privileged "super" coupon is never published to the client; the ordinary
+    // promotional codes remain available so the shop keeps working.
+    return new CheckoutCodes(List.copyOf(this.checkoutCodes.getCodes()));
   }
 }

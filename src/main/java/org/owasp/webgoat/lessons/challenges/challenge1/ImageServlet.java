@@ -31,13 +31,6 @@ public class ImageServlet {
             .getInputStream()
             .readAllBytes();
 
-    String pincode = String.format("%04d", PINCODE);
-
-    in[81216] = (byte) pincode.charAt(0);
-    in[81217] = (byte) pincode.charAt(1);
-    in[81218] = (byte) pincode.charAt(2);
-    in[81219] = (byte) pincode.charAt(3);
-
     return in;
   }
 }

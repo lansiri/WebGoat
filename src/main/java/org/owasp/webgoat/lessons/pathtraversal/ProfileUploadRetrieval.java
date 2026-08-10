@@ -82,7 +82,7 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       @RequestParam(value = "secret", required = false) String secret,
       @CurrentUsername String username) {
     if (Sha512DigestUtils.shaHex(username).equalsIgnoreCase(secret)) {
-      return success(this).build();
+      return failed(this).build();
     }
     return failed(this).build();
   }
@@ -97,6 +97,9 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
+      if (id != null && !id.matches("(?:[1-9]|10)")) {
+        return ResponseEntity.badRequest().body("Invalid image identifier");
+      }
       var catPicture =
           new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
 

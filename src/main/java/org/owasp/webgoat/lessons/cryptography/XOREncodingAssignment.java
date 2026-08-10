@@ -22,9 +22,6 @@ public class XOREncodingAssignment implements AssignmentEndpoint {
   @PostMapping("/crypto/encoding/xor")
   @ResponseBody
   public AttackResult completed(@RequestParam String answer_pwd1) {
-    if (answer_pwd1 != null && answer_pwd1.equals("databasepassword")) {
-      return success(this).feedback("crypto-encoding-xor.success").build();
-    }
     return failed(this).feedback("crypto-encoding-xor.empty").build();
   }
 }

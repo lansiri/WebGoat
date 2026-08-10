@@ -72,11 +72,11 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
 
     // Solution is posted by the user as a separate comment
     if (commentStr.contains(fileContentsForUser)) {
-      return success(this).build();
+      return failed(this).build();
     }
 
     try {
-      Comment comment = comments.parseXml(commentStr, false);
+      Comment comment = comments.parseXml(commentStr, true);
       if (fileContentsForUser.contains(comment.getText())) {
         comment.setText("Nice try, you need to send the file to WebWolf");
       }

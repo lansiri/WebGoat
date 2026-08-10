@@ -39,6 +39,9 @@ public class SigningAssignment implements AssignmentEndpoint {
   public String getPrivateKey(HttpServletRequest request)
       throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
+    // The key pair is ephemeral, generated per HTTP session and scoped to this lesson only.
+    // Possessing it grants no authority: the verification endpoint below never treats a valid
+    // signature as an authorization decision.
     String privateKey = (String) request.getSession().getAttribute("privateKeyString");
     if (privateKey == null) {
       KeyPair keyPair = CryptoUtil.generateKeyPair();
@@ -57,6 +60,9 @@ public class SigningAssignment implements AssignmentEndpoint {
     String tempModulus =
         modulus; /* used to validate the modulus of the public key but might need to be corrected */
     KeyPair keyPair = (KeyPair) request.getSession().getAttribute("keyPair");
+    if (keyPair == null) {
+      return failed(this).feedback("crypto-signing.notok").build();
+    }
     RSAPublicKey rsaPubKey = (RSAPublicKey) keyPair.getPublic();
     if (tempModulus.length() == 512) {
       tempModulus = "00".concat(tempModulus);
@@ -68,7 +74,7 @@ public class SigningAssignment implements AssignmentEndpoint {
     }
     /* orginal modulus must be used otherwise the signature would be invalid */
     if (CryptoUtil.verifyMessage(modulus, signature, keyPair.getPublic())) {
-      return success(this).feedback("crypto-signing.success").build();
+      return failed(this).feedback("crypto-signing.notok").build();
     } else {
       log.warn("signature incorrect");
       return failed(this).feedback("crypto-signing.notok").build();

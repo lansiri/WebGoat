@@ -37,13 +37,7 @@ public class SqlInjectionChallengeLogin implements AssignmentEndpoint {
       statement.setString(2, password);
       var resultSet = statement.executeQuery();
 
-      if (resultSet.next()) {
-        return ("tom".equals(username))
-            ? success(this).build()
-            : failed(this).feedback("ResultsButNotTom").build();
-      } else {
-        return failed(this).feedback("NoResultsMatched").build();
-      }
+      return failed(this).feedback("NoResultsMatched").build();
     }
   }
 }
